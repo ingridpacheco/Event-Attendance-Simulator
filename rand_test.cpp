@@ -15,7 +15,6 @@
 // Function that determines the size of a data package (actual function)
 int data_package_size() {
 	long double seed = rand1();
-	//printf("Seed is %Lf\n", seed);
 	if (seed < .3) return 64;
 	else if (seed < .3 + .1) return 512;
 	else if (seed < .3 + .1 + .3) return 1500;
@@ -63,4 +62,9 @@ int main() {
 	
 	printf("Voice Package Quantity\n");
 	printf("\tSample Mean: %lf\n", sample_mean(&voice_package_number));
+	
+	putchar('\n');
+	
+	printf("Exponential Silence Period\n");
+	printf("\tSample Mean: %Lf\n", sample_mean(&exponential,(long double)1/.650));
 }
