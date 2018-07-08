@@ -6,7 +6,7 @@
 // Number used for large sample sizes
 #define BIGNUM 2000000
 
-long double random() {
+long double rand1() {
 	return (long double) rand() / (long double) RAND_MAX;
 }
 

@@ -14,7 +14,7 @@
 
 // Function that determines the size of a data package (actual function)
 int data_package_size() {
-	long double seed = random();
+	long double seed = rand1();
 	//printf("Seed is %Lf\n", seed);
 	if (seed < .3) return 64;
 	else if (seed < .3 + .1) return 512;
@@ -27,7 +27,7 @@ int data_package_size() {
 
 // Function that determines the number of voice packages (actual function)
 int voice_package_number() {
-	long double seed = (long double) random();
+	long double seed = (long double) rand1();
 	if (seed == 1) seed = .999999; // seed cannot be 1 or there would be a log(0), which is infinite, so... we make it a little smaller
 	return (int) ceil(log(1.0 - seed) / log(1 - 1.0L / 22.0));
 }
