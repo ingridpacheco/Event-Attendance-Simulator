@@ -1,36 +1,10 @@
+#include "data_structures.cpp"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <iostream>
 #include <time.h>
 using namespace std;
-
-class Queue{
-    private:
-        int v;
-        Queue* prox;
-    public:
-        Queue(int v) // construtor
-        {
-            this->v = v;
-            this->prox = NULL;
-        }
-
-        int obterValor() // obtém o valor
-        {
-            return v;
-        }
-
-        Queue* obterProx() // obtém o próximo No
-        {
-            return prox;
-        }
-
-        void setProx(Queue* p) // seta o próximo No
-        {
-            prox = p;
-        }
-};
 
 void execution(int transientPeriod, int customersNumber, int roundNumber, float utilization1){
     //The service 1 average time is going to be the package size average divided by the transmission rate
@@ -42,8 +16,8 @@ void execution(int transientPeriod, int customersNumber, int roundNumber, float 
 }
 
 void rounds(int transientPeriod, int customersNumber, int roundNumber, float serviceAverage1, float lambda){
-    Queue* dataTraffic;
-    Queue* voiceTraffic;
+    queue* dataTraffic = queue_create();
+    queue* voiceTraffic = queue_create();
 
     //Esperanças
     float N1q[customersNumber];

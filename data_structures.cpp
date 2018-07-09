@@ -13,17 +13,17 @@ queue* queue_create() {
 	return q;
 }
 
-// Inserts value "i" at the end of a queue "q"
-void queue_insert(queue *q, int i) {
+// Inserts customer "c" at the end of a queue "q"
+void queue_insert(queue *q, Customer c) {
 	if (q->end_of_line == NULL) {
 		q->end_of_line = (linked_list*) malloc(sizeof(linked_list));
-		q->end_of_line->value = i;
+		q->end_of_line->customer = c;
 		q->end_of_line->next = NULL;
 		q->end_of_line->previous = NULL;
 		q->head_of_line = q->end_of_line;
 	} else {
 		q->end_of_line->next = (linked_list*) malloc(sizeof(linked_list));
-		q->end_of_line->next->value = i;
+		q->end_of_line->next->customer = c;
 		q->end_of_line->next->next = NULL;
 		q->end_of_line->next->previous = q->end_of_line;
 		q->end_of_line = q->end_of_line->next;
@@ -31,17 +31,17 @@ void queue_insert(queue *q, int i) {
 	q->size++;
 }
 
-// Returns value "i" back to the head of a queue "q"
-void queue_return(queue *q, int i) {
+// Returns customer "c" back to the head of a queue "q"
+void queue_return(queue *q, Customer c) {
 	if (q->head_of_line == NULL) {
 		q->head_of_line = (linked_list*) malloc(sizeof(linked_list));
-		q->head_of_line->value = i;
+		q->head_of_line->customer = c;
 		q->head_of_line->next = NULL;
 		q->head_of_line->previous = NULL;
 		q->end_of_line = q->head_of_line;
 	} else {
 		q->head_of_line->previous = (linked_list*) malloc(sizeof(linked_list));
-		q->head_of_line->previous->value = i;
+		q->head_of_line->previous->customer = c;
 		q->head_of_line->previous->previous = NULL;
 		q->head_of_line->previous->next = q->head_of_line;
 		q->head_of_line = q->head_of_line->previous;
@@ -51,11 +51,11 @@ void queue_return(queue *q, int i) {
 
 // Removes the head of the line and returns it
 // If queue is empty, returns -1
-int queue_remove(queue *q) {
+Customer queue_remove(queue *q) {
 	if (q->head_of_line == NULL) {
 		return -1;
 	} else {
-		int ret = q->head_of_line->value;
+		Customer ret = q->head_of_line->customer;
 		q->head_of_line = q->head_of_line->next;
 		if (q->head_of_line != NULL) free(q->head_of_line->previous);
 		q->size--;

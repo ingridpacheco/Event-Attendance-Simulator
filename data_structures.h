@@ -1,8 +1,10 @@
 #ifndef DATA_STRUCTURES_H
 #define DATA_STRUCTURES_H
 
+#include "Customer.h"
+
 typedef struct LINKED_LIST {
-	int value;
+	Customer customer;
 	struct LINKED_LIST *next;
 	struct LINKED_LIST *previous;
 } linked_list;
@@ -14,8 +16,8 @@ typedef struct QUEUE {
 } queue;
 
 queue* queue_create();
-void queue_insert(queue *q, int i);
-void queue_return(queue *q, int i);
-int queue_remove(queue *q);
+void queue_insert(queue *q, Customer c);
+void queue_return(queue *q, Customer c);
+Customer queue_remove(queue *q);
 
 #endif
