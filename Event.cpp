@@ -7,6 +7,12 @@ Event::Event(double time, Customer c, event_type etype) {
 	this->etype = etype;
 }
 
+Event::Event(double time, int channel_id) {
+	this->time = time;
+	this->channel_id = channel_id;
+	this->etype = SILENCE_END;
+}
+
 void Event:treat_event(queue *data_queue, queue *voice_queue, Customer *current) {
 	if (this->etype == ARRIVAL) {
 		if (current->type == NONE) {

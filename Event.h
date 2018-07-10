@@ -1,7 +1,9 @@
-#ifndef CUSTOMER_H
-#define CUSTOMER_H
+#ifndef EVENT_H
+#define EVENT_H
 
-#include "Customer.cpp"
+#ifndef DATA_STRUCTURE_H
+#include "data_structure.cpp"
+#endif
 /*
 	Only 3 types of event are necessary.
 	When a DATA package arrives, it's added to the data queue.

@@ -1,7 +1,9 @@
 #ifndef CUSTOMER_H
 #define CUSTOMER_H
 
+#ifndef STATISTICS_H
 #include "statistics.cpp"
+#endif
 
 typedef enum {
 	NONE, // "phantom" customer, returned when dequeueing an empty queue
