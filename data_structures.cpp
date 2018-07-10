@@ -50,15 +50,17 @@ void queue_return(queue *q, Customer c) {
 }
 
 // Removes the head of the line and returns it
-// If queue is empty, returns -1
+// If queue is empty, returns customer of type NONE
 Customer queue_remove(queue *q) {
 	if (q->head_of_line == NULL) {
-		return -1;
+		return Customer(NONE,0);
 	} else {
 		Customer ret = q->head_of_line->customer;
+		linked_list *curr_head = q->head_of_line;
 		q->head_of_line = q->head_of_line->next;
-		if (q->head_of_line != NULL) free(q->head_of_line->previous);
+		free(curr_head);
 		q->size--;
+		if (q->size == 0) q->end_of_line = NULL;
 		return ret;
 	}
 }

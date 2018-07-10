@@ -3,10 +3,11 @@
 
 #include "statistics.cpp"
 
-typedef enum customer_type {
+typedef enum {
 	DATA,
-	VOICE
-};
+	VOICE,
+	NONE // "phantom" customer, returned when dequeueing an empty queue
+} customer_type;
 
 class Customer {
 	private:
@@ -19,7 +20,7 @@ class Customer {
 		double remaining_time; // X1r
 		int size; // in bits
 		Customer(customer_type type, double arrival_time);
-}
+};
 
 // Function that determines the size of a data package in bytes (actual function)
 int data_package_size();
