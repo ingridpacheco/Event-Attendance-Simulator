@@ -40,7 +40,7 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
     float EDelta[roundNumber];
     float VDelta[roundNumber];
 
-	for (int i = 0; i < roundNumber; i++) {er];
+	for (int i = 0; i < roundNumber; i++) {
 		N2q[i] = 0;
 		T1[i] = 0;
 		W1[i] = 0;

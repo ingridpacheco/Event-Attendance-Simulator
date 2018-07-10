@@ -4,16 +4,15 @@
 #include "statistics.cpp"
 
 typedef enum {
+	NONE, // "phantom" customer, returned when dequeueing an empty queue
 	DATA,
-	VOICE,
-	NONE // "phantom" customer, returned when dequeueing an empty queue
+	VOICE
 } customer_type;
 
 class Customer {
-	private:
+	public:
 		int id;
 		double arrival_time; // when this customer joined the queue
-	public:
 		customer_type type;
 		static int totalCustomers; // used for giving the next customer a new id
 		double service_time; // X1
@@ -21,6 +20,7 @@ class Customer {
 		double queue_time; // W1
 		int size; // in bits
 		Customer(customer_type type, double arrival_time);
+		Customer::Customer(int id, customer_type type, double arrival_time);
 };
 
 // Function that determines the size of a data package in bytes (actual function)
