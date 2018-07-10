@@ -6,7 +6,7 @@
 
 // Returns a new queue with size 0
 queue* queue_create() {
-	queue* q = (queue*) malloc(sizeof(queue*));
+	queue* q = (queue*) malloc(sizeof(queue));
 	q->size = 0;
 	q->head_of_line = NULL;
 	q->end_of_line = NULL;
@@ -64,3 +64,14 @@ Customer queue_remove(queue *q) {
 		return ret;
 	}
 }
+
+/*
+void queue_print(queue *q) {
+	linked_list *pointer = q->head_of_line;
+	while (pointer != q->end_of_line) {
+		cout << pointer->customer.size << "\n";
+		pointer = pointer->next;
+	}
+	if (q->end_of_line != NULL) cout << q->end_of_line->customer.size;
+}
+*/
