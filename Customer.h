@@ -18,6 +18,7 @@ class Customer {
 		static int totalCustomers; // used for giving the next customer a new id
 		double service_time; // X1
 		double remaining_time; // X1r
+		double queue_time; // W1
 		int size; // in bits
 		Customer(customer_type type, double arrival_time);
 };

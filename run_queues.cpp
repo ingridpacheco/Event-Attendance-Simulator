@@ -16,30 +16,49 @@ void execution(int transientPeriod, int customersNumber, int roundNumber, float 
 }
 
 void rounds(int transientPeriod, int customersNumber, int roundNumber, float serviceAverage1, float lambda){
-    queue* dataTraffic = queue_create();
-    queue* voiceTraffic = queue_create();
+    queue* data_traffic = queue_create(); // Queue where the data packages are stored
+    queue* voice_traffic = queue_create(); // Queue where the voice packages are stored
+	
+	float simulation_time = 0; // current time in the simulator
+	
+	// Since we must ignore the first transientPeriod customers, only customers considered will be the ones with id >= 0
+	// and we'll start counting from -transientPeriod
+	int Customer::totalCustomers = -transientPeriod; 
+	
+	Customer customer_being_served = Customer(NONE, 0); // The customer currently in the server. NONE type = no customer there.
 
-    //Esperanças
-    float N1q[customersNumber];
-    float N2q[customersNumber];
-    float Ns1[customersNumber];
-	float N1[customersNumber];
-	float Ns2[customersNumber];
-	float N2[customersNumber];
-	float W1[customersNumber];
-	float X1[customersNumber];
-	float T1[customersNumber];
-	float W2[customersNumber];
-	float X2[customersNumber];
-	float T2[customersNumber];
+    // Expectations/Averages
+	float T1[roundNumber];
+	float W1[roundNumber];
+	float X1[roundNumber];
+    float Nq1[roundNumber];
+	float T2[roundNumber];
+	float W2[roundNumber];
+    float Nq2[roundNumber];
+	
+	// Interval between packages Estimator
+    float EDelta[roundNumber];
+    float VDelta[roundNumber];
 
-    float *W1 = (float*) malloc(sizeof(float));
-    float *W2 = (float*) malloc(sizeof(float));
+	for (int i = 0; i < roundNumber; i++) {er];
+		N2q[i] = 0;
+		T1[i] = 0;
+		W1[i] = 0;
+		X1[i] = 0;
+		Nq1[i] = 0;
+		T2[i] = 0;
+		W2[i] = 0;
+		Nq2[i] = 0;
+		
+		EDelta[i] = 0;
+		VDelta[i] = 0;
+	}
 
     //People that came out of the system coming from both Queues;
-    int out1 = 0; 
-    int out2 = 0;
-
+    int out1 = 0; // data packages
+    int out2 = 0; // voice packages
+	int out = 0; // out1 + out2
+	
     int voiceArrival = 16;
     int silenceTimeAvg = 560;
 }
