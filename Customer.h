@@ -20,7 +20,7 @@ class Customer {
 		double queue_time; // W1
 		int size; // in bits
 		Customer(customer_type type, double arrival_time);
-		Customer::Customer(int id, customer_type type, double arrival_time);
+		Customer(int id, customer_type type, double arrival_time);
 };
 
 // Function that determines the size of a data package in bytes (actual function)

@@ -1,7 +1,7 @@
 #ifndef DATA_STRUCTURES_H
 #define DATA_STRUCTURES_H
 
-#include "Customer.h"
+#include "Customer.cpp"
 
 typedef struct LINKED_LIST {
 	Customer customer;

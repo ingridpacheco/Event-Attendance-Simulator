@@ -6,15 +6,6 @@
 #include <time.h>
 using namespace std;
 
-void execution(int transientPeriod, int customersNumber, int roundNumber, float utilization1){
-    //The service 1 average time is going to be the package size average divided by the transmission rate
-    float serviceAverage1 = (float) (755 * 8) / (float) (2048);
-    float lambda = utilization1 / serviceAverage1;
-    //get time that starts
-    rounds(transientPeriod, customersNumber, roundNumber, serviceAverage1, lambda);
-    //get time that ends
-}
-
 void rounds(int transientPeriod, int customersNumber, int roundNumber, float serviceAverage1, float lambda){
     queue* data_traffic = queue_create(); // Queue where the data packages are stored
     queue* voice_traffic = queue_create(); // Queue where the voice packages are stored
@@ -23,7 +14,7 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	
 	// Since we must ignore the first transientPeriod customers, only customers considered will be the ones with id >= 0
 	// and we'll start counting from -transientPeriod
-	int Customer::totalCustomers = -transientPeriod; 
+	Customer::totalCustomers = -transientPeriod; 
 	
 	Customer customer_being_served = Customer(NONE, 0); // The customer currently in the server. NONE type = no customer there.
 
@@ -41,7 +32,6 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
     float VDelta[roundNumber];
 
 	for (int i = 0; i < roundNumber; i++) {
-		N2q[i] = 0;
 		T1[i] = 0;
 		W1[i] = 0;
 		X1[i] = 0;
@@ -61,4 +51,13 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	
     int voiceArrival = 16;
     int silenceTimeAvg = 560;
+}
+
+void execution(int transientPeriod, int customersNumber, int roundNumber, float utilization1){
+    //The service 1 average time is going to be the package size average divided by the transmission rate
+    float serviceAverage1 = (float) (755 * 8) / (float) (2048);
+    float lambda = utilization1 / serviceAverage1;
+    //get time that starts
+    rounds(transientPeriod, customersNumber, roundNumber, serviceAverage1, lambda);
+    //get time that ends
 }
