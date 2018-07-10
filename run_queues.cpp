@@ -16,7 +16,7 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	// and we'll start counting from -transientPeriod
 	Customer::totalCustomers = -transientPeriod; 
 	
-	Customer customer_being_served = Customer(NONE, 0); // The customer currently in the server. NONE type = no customer there.
+	Customer customer_being_served = Customer(-99999, NONE, 0); // The customer currently in the server. NONE type = no customer there.
 
     // Expectations/Averages
 	float T1[roundNumber];

@@ -29,8 +29,14 @@ void Event:treat_event(queue *data_queue, queue *voice_queue, Customer *current)
 				*current = Customer(Customer(this->customer_id, VOICE, this->time));
 			} else queue_insert(voice_queue, Customer(this->customer_id, VOICE, this->time));
 			*/
-		} else {} // Treat silence period end
-	}
+		}
+	} else if (this->etype == EXIT) {
+		if (voice_queue->size > 0) {
+			*current = queue_remove(voice_queue);
+		} else if (data_queue->size > 0) {
+			*current = queue_remove(data_queue);
+		} else *current = Customer(-99999, NONE, 0);
+	} else {} // Treat silence period end
 }
 
 #endif
