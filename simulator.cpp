@@ -6,16 +6,21 @@
 using namespace std;
 
 int main(){
+	unsigned int seed;
     int transientPeriod, customersNumber, roundNumber;
     float utilization1;
+    // Gets the seed used for generation pseudo-random values
+    cout << "Random seed: ";
+    cin >> seed;
     // It gets the transient period, the customers number, the rounds number and the utilization
-    cout << "Período Transiente: ";
+	srand(seed);
+    cout << "Periodo Transiente: ";
     cin >> transientPeriod;
-    cout << "Número de fregueses: ";
+    cout << "Numero de fregueses: ";
     cin >> customersNumber;
-    cout << "Número de rodadas: ";
+    cout << "Numero de rodadas: ";
     cin >> roundNumber;
-    cout << "Utilização1: ";
+    cout << "Utilizacao1: ";
     cin >> utilization1;
 
     // If the number is out of the limits, it doesnt execute the simulation
