@@ -1,7 +1,5 @@
 #include "Event.h"
 
-#include "Event.h"
-
 Event::Event(double time, Customer c, event_type etype) {
 	this->time = time;
 	this->customer_id = c.id;
