@@ -7,16 +7,21 @@
 #include <time.h>
 using namespace std;
 
-void createData(float simulation_time, float lambda){
+Event createData(float simulation_time, float lambda){
 	double arrivalTime = exponential(lambda);
 	Customer fregues = Customer(DATA, simulation_time + arrivalTime);
-	simulation_time = fregues.arrival_time;
+	Event arrive = Event(simulation_time + arrivalTime, fregues, ARRIVAL);
+	return arrive;
+}
+
+Event createVoice(float simulation_time){
+	Customer fregues = Customer(VOICE, simulation_time + 16);
 	Event arrive = Event(simulation_time, fregues, ARRIVAL);
 }
 
-void createVoice(float simulation_time){
-	Customer fregues = Customer(VOICE, simulation_time + 16);
-	simulation_time = fregues.arrival_time;
+Event createSilenceVoice(float simulation_time){
+	double arrivalTime = exponential(1/650);
+	Customer fregues = Customer(VOICE, simulation_time + arrivalTime);
 	Event arrive = Event(simulation_time, fregues, ARRIVAL);
 }
 
@@ -68,26 +73,31 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 
 	list<Event> event_list;
 
-	createData(simulation_time, lambda);
-	createVoice(simulation_time);
+	list_insert(event_list, createData(simulation_time, lambda));
 
-	//por enquanto CRITÉRIO DE PARADA
-	// for (int i = 0; i < customersNumber * roundNumber; i++){
-	// 	double arrivalTime;
-		//Its the time it takes to arrive another package
-		// arrivalTime = exponential(lambda);
-		// simulation_time += arrivalTime; //Increases the current time of the simulator with the arrival time.
-		// Customer fregues = Customer(DATA, simulation_time);
-		// Event arrive = Event(simulation_time, fregues, ARRIVAL);
-		//função pra inserir no lugar certo event_list.insert(arrive);
-		//If there is someone being served
-		// while (arrivalTime > 0 && (getType(customer_being_served) != "NONE")){
-		// 	if(arrivalTime >= customer_being_served.remaining_time){
-		// 		arrivalTime -= customer_being_served.remaining_time;
-		// 		customer_being_served.remaining_time = 0;
+	// CANAIS DE VOZ
+	for(int i = 0; i < 30; i++) {
+		list_insert(event_list, createSilenceVoice(simulation_time));
+	}
 
-		// 	}
-		// }
+	while (int i = 0; i < customersNumber * roundNumber; i++) {
+		Event current_event = event_list.begin();
+		event_list.erase(event_list.begin());
+		treat_event(data_traffic, voice_traffic, &customer_being_served);
+		simulation_time = current_event.time;
+		if (current_event.etype == ARRIVAL && current_event.ctype == DATA) {
+			list_insert(event_list, createData(simulation_time, lambda)); // próximo pacote de dados
+		} else if (current_event.etype == SILENCE_END) {
+			int number_of_packages = voice_package_number();
+			for (int i = 0; i < number_of_packages; i++) {
+				c_aux = Customer(VOICE, simulation_time + 16 * i);
+				list_insert(event_list, Event(simulation_time + 16 * i, c_aux, ARRIVAL)); // novos pacotes de voz
+			}
+			d_aux = exponential (1 / 650);
+			list_insert(event_list, Event(simulation_time + 16 * number_of_packages, current_event.channel_id)); // próximo fim de silêncio
+		}
+
+	// mais coisas
 	}
 }
 
