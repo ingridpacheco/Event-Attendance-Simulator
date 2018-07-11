@@ -31,7 +31,7 @@ class Event {
 		int channel_id; // the id of the voice channel related to the event
 		customer_type ctype; // type of customer related to event
 		event_type etype; // if the event is an arrival in the system or an exit of it
-		Event(double time, Customer c, event_type etype);
+		Event(double time, Customer c, event_type etype, int channel_id = -1);
 		Event(double time, int channel_id);
 		void treat_event(queue *data_queue, queue *voice_queue, Customer *current);
 };

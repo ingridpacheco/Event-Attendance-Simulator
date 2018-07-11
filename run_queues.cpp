@@ -7,22 +7,35 @@
 #include <time.h>
 using namespace std;
 
+// Function that determines the number of voice packages (actual function)
+int voice_package_number() {
+	long double seed = (long double) rand1();
+	if (seed == 1) seed = .999999; // seed cannot be 1 or there would be a log(0), which is infinite, so... we make it a little smaller
+	return (int) ceil(log(1.0 - seed) / log(1 - 1.0L / 22.0));
+}
+
 Event createData(float simulation_time, float lambda){
 	double arrivalTime = exponential(lambda);
-	Customer fregues = Customer(DATA, simulation_time + arrivalTime);
-	Event arrive = Event(simulation_time + arrivalTime, fregues, ARRIVAL);
-	return arrive;
+	Customer customer = Customer(DATA, simulation_time + arrivalTime);
+	Event event = Event(simulation_time + arrivalTime, customer, ARRIVAL);
+	return event;
 }
 
-Event createVoice(float simulation_time){
-	Customer fregues = Customer(VOICE, simulation_time + 16);
-	Event arrive = Event(simulation_time, fregues, ARRIVAL);
+Event createVoice(float simulation_time, float offset, int channel_id){
+	Customer customer = Customer(VOICE, simulation_time + offset);
+	Event event = Event(simulation_time, customer, ARRIVAL, channel_id);
+	return event;
 }
 
-Event createSilenceVoice(float simulation_time){
-	double arrivalTime = exponential(1/650);
-	Customer fregues = Customer(VOICE, simulation_time + arrivalTime);
-	Event arrive = Event(simulation_time, fregues, ARRIVAL);
+Event createSilencePeriod(float simulation_time, float offset, int channel_id){
+	double arrivalTime = exponential(1.0/650);
+	Event event = Event(simulation_time + arrivalTime + offset, channel_id);
+	return event;
+}
+
+Event removePackage(float simulation_time, Customer customer){
+	Event event = Event(simulation_time + customer.service_time, customer, EXIT);
+	return event;
 }
 
 void rounds(int transientPeriod, int customersNumber, int roundNumber, float serviceAverage1, float lambda){
@@ -70,6 +83,10 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	
     int voiceArrival = 16;
     int silenceTimeAvg = 560;
+	
+	// How many voice packages each channel needs to send before entering silence period.
+	int voice_channels[30];
+	for (int i = 0; i < 30; i++) voice_channels[i] = 0;
 
 	list<Event> event_list;
 
@@ -77,33 +94,48 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 
 	// CANAIS DE VOZ
 	for(int i = 0; i < 30; i++) {
-		list_insert(event_list, createSilenceVoice(simulation_time));
+		list_insert(event_list, createSilencePeriod(simulation_time, 0, i));
 	}
 
-	while (int i = 0; i < customersNumber * roundNumber; i++) {
-		Event current_event = event_list.begin();
+	// In this loop, "i" means the number of packages created.
+	for (int i = 0; i < customersNumber * roundNumber;) {
+		Event current_event = *event_list.begin();
 		event_list.erase(event_list.begin());
-		treat_event(data_traffic, voice_traffic, &customer_being_served);
+		Customer c_prev = customer_being_served; // needed to test if "treat_event" will change the customer in the server
+		int data_queue_prev = data_traffic->size; // needed to test if "treat_event" will interrupt a data package being served
+		current_event.treat_event(data_traffic, voice_traffic, &customer_being_served);
 		simulation_time = current_event.time;
 		if (current_event.etype == ARRIVAL && current_event.ctype == DATA) {
-			list_insert(event_list, createData(simulation_time, lambda)); // próximo pacote de dados
-		} else if (current_event.etype == SILENCE_END) {
-			int number_of_packages = voice_package_number();
-			for (int i = 0; i < number_of_packages; i++) {
-				c_aux = Customer(VOICE, simulation_time + 16 * i);
-				list_insert(event_list, Event(simulation_time + 16 * i, c_aux, ARRIVAL)); // novos pacotes de voz
+			i++;
+			list_insert(event_list, createData(simulation_time, lambda)); // next data package
+		} else if (current_event.etype == ARRIVAL && current_event.ctype == VOICE){
+			if (voice_channels[current_event.channel_id] > 0) {
+				voice_channels[current_event.channel_id]--;
+				i++;
+				list_insert(event_list, createVoice(simulation_time, 16, current_event.channel_id)); // next voice package of this channel
+			} else {
+				list_insert(event_list, createSilencePeriod(simulation_time, 16, current_event.channel_id)); // starts next silence period 16ms later
 			}
-			d_aux = exponential (1 / 650);
-			list_insert(event_list, Event(simulation_time + 16 * number_of_packages, current_event.channel_id)); // próximo fim de silêncio
+			if (data_queue_prev > data_traffic->size) { // if a voice arrival increased the data queue, that means a data package was interrupted
+				list_remove(event_list, data_traffic->head_of_line->customer.id);
+			}
+		} else if (current_event.etype == SILENCE_END) {
+			voice_channels[current_event.channel_id] = voice_package_number();
+			list_insert(event_list, createVoice(simulation_time, 0, current_event.channel_id)); // next voice package of this channel
+		} else if (current_event.etype == EXIT && current_event.ctype == DATA){
+			// UPDATE STATISTICS
+		} else if (current_event.etype == EXIT && current_event.ctype == VOICE){
+			// UPDATE STATISTICS
+		} 
+		if (customer_being_served.id != c_prev.id) { // checks if a new customer arrived at the server due to this event
+			list_insert(event_list, removePackage(simulation_time, customer_being_served));
 		}
-
-	// mais coisas
 	}
 }
 
 void execution(int transientPeriod, int customersNumber, int roundNumber, float utilization1){
     //The service 1 average time is going to be the package size average divided by the transmission rate
-    float serviceAverage1 = (float) (755 * 8) / (float) (2048);
+    float serviceAverage1 = (float) (755 * 8) / (float) (2 * 1024 * 1024);
     float lambda = utilization1 / serviceAverage1;
     //get time that starts
     rounds(transientPeriod, customersNumber, roundNumber, serviceAverage1, lambda);

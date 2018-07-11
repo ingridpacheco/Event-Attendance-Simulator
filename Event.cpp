@@ -9,13 +9,17 @@
 #endif
 using namespace std;
 
-Event::Event(double time, Customer c, event_type etype) {
+// Constructor for events related to data/voice packages. Channel id means the channel that originated
+// the voice package. Data packages may leave it at -1 as default.
+Event::Event(double time, Customer c, event_type etype, int channel_id) {
 	this->time = time;
 	this->customer_id = c.id;
+	this->channel_id = channel_id;
 	this->ctype = c.type;
 	this->etype = etype;
 }
 
+// Constructor for events related to voice channels.
 Event::Event(double time, int channel_id) {
 	this->time = time;
 	this->channel_id = channel_id;
