@@ -12,7 +12,7 @@
 #define MATH
 #endif
 
-// It runs the rounds of the simulation for deterministics silence intervals
+/* // It runs the rounds of the simulation for deterministics silence intervals
 void rounds(int transientPeriod, int customersNumber, int roundNumber, float serviceAverage1, float lambda){
     queue* voice_traffic = queue_create(); // Queue where the voice packages are stored
 	
@@ -103,7 +103,7 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 			list_insert(event_list, removePackage(simulation_time, customer_being_served));
 		}
 	}
-}
+} */
 
 // Tests the queue about receiving new packages
 void queue_test(){

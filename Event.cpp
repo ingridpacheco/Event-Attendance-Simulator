@@ -24,6 +24,7 @@ Event::Event(double time, int channel_id) {
 	this->time = time;
 	this->channel_id = channel_id;
 	this->etype = SILENCE_END;
+	this->ctype = NONE;
 }
 
 void Event::treat_event(queue *data_queue, queue *voice_queue, Customer *current) {
@@ -56,6 +57,7 @@ void Event::treat_event(queue *data_queue, queue *voice_queue, Customer *current
 void list_insert(list<Event> &event_list, Event event) {
 	for (list<Event>::iterator it = event_list.begin(); it != event_list.end(); it++) {
 		if (it->time > event.time) {
+			cout << "arrival time: " << event.time << "\n";
 			event_list.insert(it, event);
 			return;
 		}

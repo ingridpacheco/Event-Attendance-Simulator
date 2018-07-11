@@ -80,10 +80,6 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 		EDelta[i] = 0;
 		VDelta[i] = 0;
 	}
-
-	
-	//cout << "Nq1: ";
-	//for (int i = 0; i < roundNumber; i++) cout << Nq1[i] << ", ";
 	
 	// Variables used for the areas method (Data Queue)
 	double time_data; // data queue timestamps
@@ -98,9 +94,6 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
     int out2 = 0; // voice packages
 	int out = 0; // out1 + out2
 	
-    int voiceArrival = 16;
-    int silenceTimeAvg = 560;
-	
 	// How many voice packages each channel needs to send before entering silence period.
 	int voice_channels[30];
 	for (int i = 0; i < 30; i++) voice_channels[i] = 0;
@@ -113,17 +106,20 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	for(int i = 0; i < 30; i++) {
 		list_insert(event_list, createSilencePeriod(simulation_time, 0, i));
 	}
+
 int aaaa = 0;
 int bbbb = 0;
 	// Main loop of events
 	while (Customer::totalCustomers < customersNumber * roundNumber) {
 		Event current_event = *event_list.begin();
+		cout << "1 -- " << "TIME: " << current_event.time << " TYPE: " << current_event.ctype << " CHANNEL ID: " << current_event.channel_id << "\n";
 		event_list.erase(event_list.begin());
 		Customer c_prev = customer_being_served; // needed to test if "treat_event" will change the customer in the server
 		int data_queue_prev = data_traffic->size; // needed to test if "treat_event" will interrupt a data package being served
 		current_event.treat_event(data_traffic, voice_traffic, &customer_being_served);
 		simulation_time = current_event.time;
 		if (current_event.etype == ARRIVAL && current_event.ctype == DATA) {
+			cout << "ENTREI" << "\n";
 			list_insert(event_list, createData(simulation_time, lambda)); // next data package
 			//==== Areas Method DATA ====//
 		++aaaa;

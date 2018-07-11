@@ -1,4 +1,6 @@
 #include "statistics.h"
+#include <iostream>
+using namespace std;
 #ifndef STDLIB
 #include <stdlib.h>
 #define STDLIB
@@ -67,5 +69,6 @@ long double sample_mean(double (*function)(double), double d) {
 double exponential(double rate) {
 	long double seed = rand1();
 	if (seed < .000001) seed = .000001; // seed cannot be 0 or there would be a log(0), which is infinite, so... we make it a little smaller
+	cout << "lambda: " << rate << " arrival time: " << -log(seed) / rate << "\n";
 	return -log(seed) / rate;
 }
