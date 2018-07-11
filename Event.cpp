@@ -56,7 +56,6 @@ void Event::treat_event(queue *data_queue, queue *voice_queue, Customer *current
 void list_insert(list<Event> &event_list, Event event) {
 	for (list<Event>::iterator it = event_list.begin(); it != event_list.end(); it++) {
 		if (it->time > event.time) {
-			cout << "aaaaa\n";
 			event_list.insert(it, event);
 			return;
 		}
@@ -74,26 +73,3 @@ void list_remove(list<Event> &event_list, int customer_id) {
 		}
 	}
 }
-
-/*
-int main() {
-	list<Event> event_list;
-	char input;
-	double input2;
-	while(input != 'q' && input != 'q') {
-		cout << "\n";
-		cout << "[P]rint or [I]nsert: ";
-		cin >> input;
-		if (input == 'p' || input == 'P') {
-			cout << "\nevent_list contains:";
-			for (list<Event>::iterator it = event_list.begin(); it != event_list.end(); it++)
-				cout << ' ' << it->time;
-		} else if (input == 'i' || input == 'I') {
-			cout << "Time: ";
-			cin >> input2;
-			list_insert(event_list, Event(input2, 0));
-		}
-	}
-	cout << "\n";
-}
-*/
