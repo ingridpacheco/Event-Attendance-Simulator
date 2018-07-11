@@ -18,6 +18,7 @@ using namespace std;
 	Whent the SILENCE period ends, the corresponding voice channel generates the voice package arrival events.
 */
 
+// Defines the type of the event
 typedef enum {
 	ARRIVAL,
 	EXIT,

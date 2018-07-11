@@ -14,6 +14,7 @@ int voice_package_number() {
 	return (int) ceil(log(1.0 - seed) / log(1 - 1.0L / 22.0));
 }
 
+// Creates the arrival event of a data customer 
 Event createData(float simulation_time, float lambda){
 	double arrivalTime = exponential(lambda);
 	Customer customer = Customer(DATA, simulation_time + arrivalTime);
@@ -21,28 +22,32 @@ Event createData(float simulation_time, float lambda){
 	return event;
 }
 
+// Creates the arrival event of a voice customer 
 Event createVoice(float simulation_time, float offset, int channel_id){
 	Customer customer = Customer(VOICE, simulation_time + offset);
 	Event event = Event(simulation_time, customer, ARRIVAL, channel_id);
 	return event;
 }
 
+// Creates the silence period event  
 Event createSilencePeriod(float simulation_time, float offset, int channel_id){
 	double arrivalTime = exponential(1.0/650);
 	Event event = Event(simulation_time + arrivalTime + offset, channel_id);
 	return event;
 }
 
+// Creates the exit event of any package
 Event removePackage(float simulation_time, Customer customer){
 	Event event = Event(simulation_time + customer.service_time, customer, EXIT);
 	return event;
 }
 
+// It runs the rounds of the simulation
 void rounds(int transientPeriod, int customersNumber, int roundNumber, float serviceAverage1, float lambda){
     queue* data_traffic = queue_create(); // Queue where the data packages are stored
     queue* voice_traffic = queue_create(); // Queue where the voice packages are stored
 	
-	float simulation_time = 0; // current time in the simulator
+	float simulation_time = 0; // Current time in the simulator
 	
 	// Since we must ignore the first transientPeriod customers, only customers considered will be the ones with id >= 0
 	// and we'll start counting from -transientPeriod
@@ -76,7 +81,7 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 		VDelta[i] = 0;
 	}
 
-    //People that came out of the system coming from both Queues;
+    // People that came out of the system coming from both Queues;
     int out1 = 0; // data packages
     int out2 = 0; // voice packages
 	int out = 0; // out1 + out2
@@ -92,7 +97,7 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 
 	list_insert(event_list, createData(simulation_time, lambda));
 
-	// CANAIS DE VOZ
+	// VOICE CHANNELS
 	for(int i = 0; i < 30; i++) {
 		list_insert(event_list, createSilencePeriod(simulation_time, 0, i));
 	}
@@ -134,10 +139,9 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 }
 
 void execution(int transientPeriod, int customersNumber, int roundNumber, float utilization1){
-    //The service 1 average time is going to be the package size average divided by the transmission rate
+    // The service 1 average time is going to be the package size average divided by the transmission rate
     float serviceAverage1 = (float) (755 * 8) / (float) (2 * 1024 * 1024);
     float lambda = utilization1 / serviceAverage1;
-    //get time that starts
+    // Starts rounds
     rounds(transientPeriod, customersNumber, roundNumber, serviceAverage1, lambda);
-    //get time that ends
 }

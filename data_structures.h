@@ -5,12 +5,14 @@
 #include "Customer.cpp"
 #endif
 
+// Sets the linked list
 typedef struct LINKED_LIST {
 	Customer customer;
 	struct LINKED_LIST *next;
 	struct LINKED_LIST *previous;
 } linked_list;
 
+// Sets the structure of a queue
 typedef struct QUEUE {
 	int size;
 	linked_list *head_of_line;

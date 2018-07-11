@@ -8,6 +8,7 @@ using namespace std;
 int main(){
     int transientPeriod, customersNumber, roundNumber;
     float utilization1;
+    // It gets the transient period, the customers number, the rounds number and the utilization
     cout << "Período Transiente: ";
     cin >> transientPeriod;
     cout << "Número de fregueses: ";
@@ -17,6 +18,7 @@ int main(){
     cout << "Utilização1: ";
     cin >> utilization1;
 
+    // If the number is out of the limits, it doesnt execute the simulation
     if(transientPeriod <= 0 || customersNumber <= 0 || roundNumber <= 0 || !(0.1 <= utilization1 && utilization1 <= 0.7))
         cout << "Esse valor não é válido, todos os valores devem ser maior que 0 e a utilização deve estar entre 0.1 e 0.7\n";
     else

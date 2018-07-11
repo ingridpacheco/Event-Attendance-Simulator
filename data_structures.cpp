@@ -70,6 +70,7 @@ Customer queue_remove(queue *q) {
 }
 
 /*
+// Prints the queue
 void queue_print(queue *q) {
 	linked_list *pointer = q->head_of_line;
 	while (pointer != q->end_of_line) {

@@ -5,6 +5,7 @@
 #include "statistics.cpp"
 #endif
 
+// Defines the type of the customer
 typedef enum {
 	NONE, // "phantom" customer, returned when dequeueing an empty queue
 	DATA,
