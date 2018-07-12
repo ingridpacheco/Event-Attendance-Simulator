@@ -129,28 +129,24 @@ int bbbb = 0;
 			
 			
 			if (data_queue_prev != data_traffic->size/* || (c_prev.type != customer_being_served.type && c_prev)*/) {
-				cout << "AAAAAAAAAAAAAAAAA\n";
 				//==== Areas Method DATA ====//
 				if (time_data == 0) {
 					time_data = simulation_time;
 					size_data = data_traffic->size;
 				} else {
 					Nq1[round] += fabs((simulation_time - time_data) * (size_data));
-					cout << "\t2: " << fabs((simulation_time - time_data) * (size_data)) << "\n";
 					time_data = simulation_time;
 					size_data = data_traffic->size;
 				}
 				//=========================//
 			}
 			if (voice_queue_prev != voice_traffic->size) {
-				cout << "BBBBBBBBBBBBBBBBB\n";
 				//==== Areas Method VOICE ====//
 				if (time_voice == 0) {
 					time_voice = simulation_time;
 					size_voice = voice_traffic->size;
 				} else {
 					Nq2[round] += fabs((simulation_time - time_voice) * (size_voice));
-					cout << "\t1: " << fabs((simulation_time - time_voice) * (size_voice)) << "\n";
 					time_voice = simulation_time;
 					size_voice = voice_traffic->size;
 				}

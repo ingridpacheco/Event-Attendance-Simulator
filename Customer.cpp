@@ -23,7 +23,7 @@ Customer::Customer(int id, customer_type type, double arrival_time) {
 	this->type = type;
 	if (type == DATA) this->size = data_package_size() * 8;
 	else if (type == VOICE) this->size = 512;
-	this->service_time = (double) this->size / 2097152;
+	this->service_time = (double) this->size / (0.002 * 1024 * 1024);
 	this->queue_time = 0;
 	this->remaining_time = this->service_time;
 	this->arrival_time = arrival_time;
