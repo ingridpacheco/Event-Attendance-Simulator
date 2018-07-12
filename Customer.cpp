@@ -11,7 +11,7 @@ Customer::Customer(customer_type type, double arrival_time) {
 	if (type == DATA) this->size = data_package_size() * 8;
 	else if (type == VOICE) this->size = 512;
 	this->service_time = (double) this->size / 2097152;
-	this->queue_time = 0;
+	this->time_in_queue = 0;
 	this->remaining_time = this->service_time;
 	this->arrival_time = arrival_time;
 }
@@ -22,9 +22,10 @@ Customer::Customer() {
 	this->type = NONE;
 	this->size = 0;
 	this->service_time = 0;
-	this->queue_time = 0;
-	this->remaining_time = 0;
+	this->time_in_queue = 0;
+	this->time_in_service = 0;
 	this->arrival_time = 0;
+	this->checkpoint_time = 0;
 }
 
 // Defines a Customer with identification
@@ -34,9 +35,10 @@ Customer::Customer(int id, customer_type type, double arrival_time) {
 	if (type == DATA) this->size = data_package_size() * 8;
 	else if (type == VOICE) this->size = 512;
 	this->service_time = (double) this->size / (0.002 * 1024 * 1024);
-	this->queue_time = 0;
-	this->remaining_time = this->service_time;
+	this->time_in_queue = 0;
+	this->time_in_service = 0;
 	this->arrival_time = arrival_time;
+	this->checkpoint_time = arrival_time;
 }
 
 // Function that determines the size of a data package in bytes (actual function)

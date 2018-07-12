@@ -16,11 +16,12 @@ class Customer {
 	public:
 		int id;
 		double arrival_time; // when this customer joined the queue
+		double checkpoint_time; // used to know when was the last time this customer was sent to the queue/server
 		customer_type type;
 		static int totalCustomers; // used for giving the next customer a new id
-		double service_time; // X1
-		double remaining_time; // X1r
-		double queue_time; // W1
+		double service_time; // how long it takes the server to serve this customer
+		double time_in_service; // X1
+		double time_in_queue; // W1
 		int size; // in bits
 		// Customer(customer_type type, double arrival_time);
 		Customer();

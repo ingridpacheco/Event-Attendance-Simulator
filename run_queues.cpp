@@ -115,15 +115,13 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 int aaaa = 0;
 int bbbb = 0;
 	// Main loop of events
-	for (int round = 1; round < roundNumber + 1; round++) {
+	for (int round = 0; round < roundNumber; round++) {
 		//--- Variables needed to calculate the statistics for each round ---//
 		double round_time = simulation_time;
-		int round_data_arrivals = 0;
-		int round_voice_arrivals = 0;
 		int round_data_exits = 0;
 		int round_voice_exits = 0;
 		//-----------------------------------------------------------------//
-		while (Customer::totalCustomers < customersNumber * round) {
+		while (Customer::totalCustomers < customersNumber * (round+1)) {
 			Event current_event = *event_list.begin();
 			
 			event_list.erase(event_list.begin());
@@ -160,7 +158,6 @@ int bbbb = 0;
 			
 			if (current_event.etype == ARRIVAL && current_event.customer.type == DATA) {
 				list_insert(event_list, createData(-99999, simulation_time, lambda)); // next data package
-				round_data_arrivals++;
 			} else if (current_event.etype == ARRIVAL && current_event.customer.type == VOICE){
 				if (voice_channels[current_event.channel_id] > 0) {
 					voice_channels[current_event.channel_id]--;
@@ -169,10 +166,11 @@ int bbbb = 0;
 					list_insert(event_list, createSilencePeriod(simulation_time, 16, current_event.channel_id)); // starts next silence period 16ms later
 				}
 				if (data_queue_prev > data_traffic->size) { // if a voice arrival increased the data queue, that means a data package was interrupted
-					list_remove(event_list, data_traffic->head_of_line->customer.id);
+					Customer removed_customer = data_traffic->head_of_line->customer; // the data package that suffered interruption
+					removed_customer.checkpoint_time = simulation_time; // <<<<<<<<<<<<<<<<<<<<<<<<<<<<< PRECISO DAR UM JEITO DE ACESSAR ESSE CARA PRA FAZER ESSA ATUALIZACAO!!!!!!
+					list_remove(event_list, removed_customer.id);
 				}
 				
-				round_voice_arrivals++;
 			} else if (current_event.etype == SILENCE_END) {
 				voice_channels[current_event.channel_id] = voice_package_number();
 				//cout << "Channel " << current_event.channel_id << " will generate: " << voice_channels[current_event.channel_id] << " voice packages!\n";
@@ -185,17 +183,21 @@ int bbbb = 0;
 				round_data_exits++;
 			} else if (current_event.etype == EXIT && current_event.customer.type == VOICE){
 				T2[round] += (current_event.time - current_event.customer.arrival_time);
+				W2[round] += current_event.customer.time_in_queue;
+
 				round_voice_exits++;
 			} 
 			if (customer_being_served.id != c_prev.id) { // checks if a new customer arrived at the server due to this event
 				if (customer_being_served.type != NONE) {
+					customer_being_served.time_in_queue += (simulation_time - customer_being_served.checkpoint_time);
+					customer_being_served.checkpoint_time = simulation_time;
 					list_insert(event_list, removePackage(simulation_time, customer_being_served));
 				}
 			}
 			
 			
 			
-			///=======
+			//=======
 			myfile << "1 -- " << "TIME: " << current_event.time << "ms TYPE: ";
 			if (current_event.etype == ARRIVAL && current_event.customer.type == DATA) myfile << "Data Arrival";
 			else if (current_event.etype == ARRIVAL && current_event.customer.type == VOICE) myfile << "Voice Arrival";
@@ -204,7 +206,7 @@ int bbbb = 0;
 			else if (current_event.etype == EXIT && current_event.customer.type == VOICE) myfile << "Voice Departure";
 			if (current_event.etype != SILENCE_END) myfile << " CUSTOMER ID: "<< (current_event.customer.id);
 			myfile << " CHANNEL ID: " << current_event.channel_id << "\n";
-			///=======
+			//=======
 			
 		}
 		myfile << "End of Round " << round << " ; Duration: " << (simulation_time - round_time) << "ms\n\n";
@@ -213,41 +215,49 @@ int bbbb = 0;
 		Nq2[round] /= (simulation_time - round_time);
 		
 		// Divide the sum of times by the number of events to find the average
-		T1[round] /= round_data_exits;
-		T2[round] /= round_voice_exits;
+		if (round_data_exits > 0) T1[round] /= round_data_exits;
+		if (round_voice_exits > 0) T2[round] /= round_voice_exits;
+		if (round_voice_exits > 0) W2[round] /= round_voice_exits;
 	}
 	
 	//cout << "\nqueue size: " << data_traffic->size;
 	//cout << "\na: " << aaaa << "\nb: " << bbbb << "\na-b: " << aaaa - bbbb << "\n";
 	
-	cout << "\nNq1: ";
-	for (int i = 0; i < roundNumber; i++) cout << Nq1[i] << ", ";
+	cout << "\nNq1: [ ";
+	for (int i = 0; i < roundNumber-1; i++) cout << Nq1[i] << ", "; cout << Nq1[roundNumber-1] << " ]\n";
 	float ENq1 = 0;
 	for(int i=0; i < roundNumber; i++) ENq1 += Nq1[i];
 	ENq1 /= roundNumber;
 	
-	cout << "\nNq2: ";
-	for (int i = 0; i < roundNumber; i++) cout << Nq2[i] << ", ";
+	cout << "\nNq2: [ ";
+	for (int i = 0; i < roundNumber-1; i++) cout << Nq2[i] << ", "; cout << Nq2[roundNumber-1] << " ]\n";
 	float ENq2 = 0;
 	for(int i=0; i < roundNumber; i++) ENq2 += Nq2[i];
 	ENq2 /= roundNumber;
 	
-	cout << "\nT1: ";
-	for (int i = 0; i < roundNumber; i++) cout << T1[i] << ", ";
+	cout << "\nT1: [ ";
+	for (int i = 0; i < roundNumber-1; i++) cout << T1[i] << ", "; cout << T1[roundNumber-1] << " ]\n";
 	float ET1 = 0;
 	for(int i=0; i < roundNumber; i++) ET1 += T1[i];
 	ET1 /= roundNumber;
 	
-	cout << "\nT2: ";
-	for (int i = 0; i < roundNumber; i++) cout << T2[i] << ", ";
+	cout << "\nT2: [ ";
+	for (int i = 0; i < roundNumber-1; i++) cout << T2[i] << ", "; cout << T2[roundNumber-1] << " ]\n";
 	float ET2 = 0;
 	for(int i=0; i < roundNumber; i++) ET2 += T2[i];
 	ET2 /= roundNumber;
+	
+	cout << "\nW2: [ ";
+	for (int i = 0; i < roundNumber-1; i++) cout << W2[i] << ", "; cout << W2[roundNumber-1] << " ]\n";
+	float EW2 = 0;
+	for(int i=0; i < roundNumber; i++) EW2 += W2[i];
+	EW2 /= roundNumber;
 	
 	
 	cout << "\nE[T1]: " << ET1 << "\n";
 	cout << "\nE[Nq1]: " << ENq1 << "\n";
 	cout << "\nE[T2]: " << ET2 << "\n";
+	cout << "\nE[W2]: " << EW2 << "\n";
 	cout << "\nE[Nq2]: " << ENq2 << "\n";
 	
 }
