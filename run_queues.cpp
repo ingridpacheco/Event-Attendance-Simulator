@@ -115,7 +115,7 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 int aaaa = 0;
 int bbbb = 0;
 	// Main loop of events
-	for (int round = 0; round < roundNumber; round++) {
+	for (int round = 1; round < roundNumber + 1; round++) {
 		double round_time = simulation_time;
 		while (Customer::totalCustomers < customersNumber * round) {
 			Event current_event = *event_list.begin();
@@ -204,10 +204,10 @@ int bbbb = 0;
 			///=======
 			
 		}
-		myfile << "Round: " << round << " ; Time: " << round_time << "\n";
+		myfile << "Round: " << round << " ; Time: " << (simulation_time - round_time) << "\n";
 		// Areas Method requires dividing the area by the time spent
-		//Nq1[round] /= (simulation_time - round_time);
-		//Nq2[round] /= (simulation_time - round_time);
+		Nq1[round] /= (simulation_time - round_time);
+		Nq2[round] /= (simulation_time - round_time);
 	}
 	
 	//cout << "\nqueue size: " << data_traffic->size;
