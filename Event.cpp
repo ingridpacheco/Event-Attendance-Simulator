@@ -29,6 +29,7 @@ Event::Event(double time, int channel_id) {
 
 void Event::treat_event(queue *data_queue, queue *voice_queue, Customer *current) {
 	if (this->etype == ARRIVAL) {
+		this->customer_id = Customer::totalCustomers++;
 		if (current->type == NONE) {
 			*current = Customer(this->customer_id, this->ctype, this->time);
 		} else if (this->ctype == DATA) {
@@ -57,7 +58,7 @@ void Event::treat_event(queue *data_queue, queue *voice_queue, Customer *current
 void list_insert(list<Event> &event_list, Event event) {
 	for (list<Event>::iterator it = event_list.begin(); it != event_list.end(); it++) {
 		if (it->time > event.time) {
-			cout << "arrival time: " << event.time << "\n";
+			//cout << "arrival time: " << event.time << "\n";
 			event_list.insert(it, event);
 			return;
 		}

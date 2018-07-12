@@ -22,7 +22,7 @@ class Customer {
 		double remaining_time; // X1r
 		double queue_time; // W1
 		int size; // in bits
-		Customer(customer_type type, double arrival_time);
+		// Customer(customer_type type, double arrival_time);
 		Customer(int id, customer_type type, double arrival_time);
 };
 

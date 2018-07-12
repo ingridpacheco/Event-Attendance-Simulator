@@ -57,7 +57,7 @@ void queue_return(queue *q, Customer c) {
 // If queue is empty, returns customer of type NONE
 Customer queue_remove(queue *q) {
 	if (q->head_of_line == NULL) {
-		return Customer(NONE,0);
+		return Customer(-99999,NONE,0);
 	} else {
 		Customer ret = q->head_of_line->customer;
 		linked_list *curr_head = q->head_of_line;

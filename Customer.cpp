@@ -3,6 +3,7 @@
 // Sets the total of customers to zero
 int Customer::totalCustomers = 0;
 
+/*
 // Defines a Customer without identification
 Customer::Customer(customer_type type, double arrival_time) {
 	this->id = totalCustomers++;
@@ -14,6 +15,7 @@ Customer::Customer(customer_type type, double arrival_time) {
 	this->remaining_time = this->service_time;
 	this->arrival_time = arrival_time;
 }
+*/
 
 // Defines a Customer with identification
 Customer::Customer(int id, customer_type type, double arrival_time) {
