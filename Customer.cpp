@@ -17,6 +17,16 @@ Customer::Customer(customer_type type, double arrival_time) {
 }
 */
 
+Customer::Customer() {
+	this->id = -99999;
+	this->type = NONE;
+	this->size = 0;
+	this->service_time = 0;
+	this->queue_time = 0;
+	this->remaining_time = 0;
+	this->arrival_time = 0;
+}
+
 // Defines a Customer with identification
 Customer::Customer(int id, customer_type type, double arrival_time) {
 	this->id = id;

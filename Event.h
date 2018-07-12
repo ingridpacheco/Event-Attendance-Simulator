@@ -28,9 +28,8 @@ typedef enum {
 class Event {
 	public:
 		double time; // the time when it begins
-		int customer_id; // the id of the customer related to the event
+		Customer customer; // the customer related to the event
 		int channel_id; // the id of the voice channel related to the event
-		customer_type ctype; // type of customer related to event
 		event_type etype; // if the event is an arrival in the system or an exit of it
 		Event(double time, Customer c, event_type etype, int channel_id = -1);
 		Event(double time, int channel_id);
