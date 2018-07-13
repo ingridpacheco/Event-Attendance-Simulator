@@ -121,8 +121,8 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	ofstream myfile;
 	myfile.open ("log.txt");
 
-int aaaa = 0;
-int bbbb = 0;
+	int simulation_percentage = -1;
+	cout << endl;
 	// Main loop of events
 	for (int round = 0; round < roundNumber; round++) {
 		//--- Variables needed to calculate the statistics for each round ---//
@@ -212,6 +212,11 @@ int bbbb = 0;
 			}
 			
 			
+			// Percentage of simulation complete
+			if (simulation_percentage != (int)((float) Customer::totalCustomers * 100 / (customersNumber * roundNumber))) {
+				cout << "Simulation in progress... " << (int)((float) Customer::totalCustomers * 100 / (customersNumber * roundNumber)) << "%" << '\r';
+				simulation_percentage = (int)((float) Customer::totalCustomers * 100 / (customersNumber * roundNumber));
+			}
 			
 			//=======
 			myfile << "1 -- " << "TIME: " << current_event.time << "ms TYPE: ";
@@ -225,6 +230,7 @@ int bbbb = 0;
 			//=======
 			
 		}
+		
 		myfile << "End of Round " << round << " ; Duration: " << (simulation_time - round_time) << "ms\n\n";
 		// Areas Method requires dividing the area by the time spent
 		Nq1[round] /= (simulation_time - round_time);
@@ -237,6 +243,7 @@ int bbbb = 0;
 		if (round_voice_exits > 0) T2[round] /= round_voice_exits;
 		if (round_voice_exits > 0) W2[round] /= round_voice_exits;
 	}
+	cout << endl;
 	
 	//cout << "\nqueue size: " << data_traffic->size;
 	//cout << "\na: " << aaaa << "\nb: " << bbbb << "\na-b: " << aaaa - bbbb << "\n";
