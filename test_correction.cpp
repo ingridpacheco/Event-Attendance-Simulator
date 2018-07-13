@@ -1,4 +1,5 @@
-#include "Event.cpp"
+//#include "Event.cpp"
+#include "run_queues.cpp"
 #ifndef STDIO
 #include <stdio.h>
 #define STDIO
@@ -12,8 +13,16 @@
 #define MATH
 #endif
 
-/* // It runs the rounds of the simulation for deterministics silence intervals
-void rounds(int transientPeriod, int customersNumber, int roundNumber, float serviceAverage1, float lambda){
+// Creates the silence period event  
+Event createSilencePeriod_deterministic(float simulation_time, float offset, int channel_id){
+	double arrivalTime = 300;
+	Event event = Event(simulation_time + arrivalTime + offset, channel_id);
+	return event;
+}
+
+// It runs the rounds of the simulation for deterministics silence intervals
+void deterministic_silence_test(int transientPeriod, int customersNumber, int roundNumber, float serviceAverage1){
+	float lambda = 0.15;
     queue* voice_traffic = queue_create(); // Queue where the voice packages are stored
 	
 	float simulation_time = 0; // Current time in the simulator
@@ -25,10 +34,6 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	Customer customer_being_served = Customer(-99999, NONE, 0); // The customer currently in the server. NONE type = no customer there.
 
     // Expectations/Averages
-	float T1[roundNumber];
-	float W1[roundNumber];
-	float X1[roundNumber];
-    float Nq1[roundNumber];
 	float T2[roundNumber];
 	float W2[roundNumber];
     float Nq2[roundNumber];
@@ -38,10 +43,6 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
     float VDelta[roundNumber];
 
 	for (int i = 0; i < roundNumber; i++) {
-		T1[i] = 0;
-		W1[i] = 0;
-		X1[i] = 0;
-		Nq1[i] = 0;
 		T2[i] = 0;
 		W2[i] = 0;
 		Nq2[i] = 0;
@@ -51,12 +52,8 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	}
 
     // People that came out of the system coming from both Queues;
-    int out1 = 0; // data packages
     int out2 = 0; // voice packages
 	int out = 0; // out1 + out2
-	
-    int voiceArrival = 16;
-    int silenceTimeAvg = 560;
 	
 	// How many voice packages each channel needs to send before entering silence period.
 	int voice_channels[30];
@@ -66,7 +63,7 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 
 	// VOICE CHANNELS
 	for(int i = 0; i < 30; i++) {
-		list_insert(event_list, createSilencePeriod(simulation_time, 0, i));
+		list_insert(event_list, createSilencePeriod_deterministic(simulation_time, 0, i));
 	}
 
 	// In this loop, "i" means the number of packages created.
@@ -103,7 +100,7 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 			list_insert(event_list, removePackage(simulation_time, customer_being_served));
 		}
 	}
-} */
+}
 
 // Tests the queue about receiving new packages
 void queue_test(){
