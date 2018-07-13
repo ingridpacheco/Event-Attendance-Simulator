@@ -33,7 +33,7 @@ class Event {
 		event_type etype; // if the event is an arrival in the system or an exit of it
 		Event(double time, Customer c, event_type etype, int channel_id = -1);
 		Event(double time, int channel_id);
-		void treat_event(queue *data_queue, queue *voice_queue, Customer *current);
+		void treat_event(queue *data_queue, queue *voice_queue, Customer *current, bool preemption);
 };
 
 // Inserts a new event into the event list in chronological order

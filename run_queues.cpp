@@ -44,11 +44,11 @@ Event removePackage(float simulation_time, Customer customer){
 }
 
 // It runs the rounds of the simulation
-void rounds(int transientPeriod, int customersNumber, int roundNumber, float serviceAverage1, float lambda){
+void rounds(int transientPeriod, int customersNumber, int roundNumber, float serviceAverage1, float lambda, bool preemption){
     queue* data_traffic = queue_create(); // Queue where the data packages are stored
     queue* voice_traffic = queue_create(); // Queue where the voice packages are stored
 	
-	float simulation_time = 0; // Current time in the simulator
+	double simulation_time = 0; // Current time in the simulator
 	
 	// Since we must ignore the first transientPeriod customers, only customers considered will be the ones with id >= 0
 	// and we'll start counting from -transientPeriod
@@ -137,7 +137,7 @@ int bbbb = 0;
 			Customer c_prev = customer_being_served; // needed to test if "treat_event" will change the customer in the server
 			int data_queue_prev = data_traffic->size; // needed to test if "treat_event" will interrupt a data package being served
 			int voice_queue_prev = voice_traffic->size; // both of these are needed for the Areas Method
-			current_event.treat_event(data_traffic, voice_traffic, &customer_being_served);
+			current_event.treat_event(data_traffic, voice_traffic, &customer_being_served, preemption);
 			simulation_time = current_event.time;
 			
 			
@@ -174,11 +174,12 @@ int bbbb = 0;
 				} else {
 					list_insert(event_list, createSilencePeriod(simulation_time, 16, current_event.channel_id)); // starts next silence period 16ms later
 				}
-				if (data_queue_prev > data_traffic->size) { // if a voice arrival increased the data queue, that means a data package was interrupted
-					Customer removed_customer = data_traffic->head_of_line->customer; // the data package that suffered interruption
+				if (data_queue_prev < data_traffic->size) { // if a voice arrival increased the data queue, that means a data package was interrupted
+					Customer removed_customer = queue_remove(data_traffic); // the data package that suffered interruption
 					removed_customer.time_in_service += (simulation_time - removed_customer.checkpoint_time);
 					removed_customer.checkpoint_time = simulation_time;
 					queue_return(data_traffic, removed_customer);
+		myfile << "1 -- " << "REMOVED " << removed_customer.id << " FROM DATA QUEUE" << endl;
 					list_remove(event_list, removed_customer.id);
 				}
 				
@@ -201,7 +202,7 @@ int bbbb = 0;
 				W2[round] += current_event.customer.time_in_queue;
 
 				round_voice_exits++;
-			} 
+			}
 			if (customer_being_served.id != c_prev.id) { // checks if a new customer arrived at the server due to this event
 				if (customer_being_served.type != NONE) {
 					customer_being_served.time_in_queue += (simulation_time - customer_being_served.checkpoint_time);
@@ -286,10 +287,10 @@ int bbbb = 0;
 	
 }
 
-void execution(int transientPeriod, int customersNumber, int roundNumber, float utilization1){
+void execution(int transientPeriod, int customersNumber, int roundNumber, float utilization1, bool preemption){
     // The service 1 average time is going to be the package size average divided by the transmission rate
     float serviceAverage1 = (float) (755 * 8) / (float) (0.002 * 1024 * 1024);
     float lambda = utilization1 / serviceAverage1;
     // Starts rounds
-    rounds(transientPeriod, customersNumber, roundNumber, serviceAverage1, lambda);
+    rounds(transientPeriod, customersNumber, roundNumber, serviceAverage1, lambda, preemption);
 }
