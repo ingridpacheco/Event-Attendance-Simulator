@@ -91,6 +91,15 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	float EW2 = 0;
 	float ENq2 = 0;
 	
+	// Standard deviations of the confidence intervals
+	float ST1 = 0;
+	float SW1 = 0;
+	float SX1 = 0;
+	float SNq1 = 0;
+	float ST2 = 0;
+	float SW2 = 0;
+	float SNq2 = 0;
+	
 	// Variables used for the areas method (Data Queue)
 	double time_data = 0; // data queue timestamps
 	int size_data; // data queue sizes
@@ -252,20 +261,40 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	if (allow_logging) log_file.close();
 	
 	// Finding the averages of the confidence intervals
-	for(int i=0; i < roundNumber; i++) ET1 += T1[i];
+	for(int i=0; i < roundNumber; i++) { 
+		ET1 += T1[i];
+		EW1 += W1[i];
+		EX1 += X1[i];
+		ENq1 += Nq1[i];
+		ET2 += T2[i];
+		EW2 += W2[i];
+		ENq2 += Nq2[i];
+	}
 	ET1 /= roundNumber;
-	for(int i=0; i < roundNumber; i++) EW1 += W1[i];
 	EW1 /= roundNumber;
-	for(int i=0; i < roundNumber; i++) EX1 += X1[i];
 	EX1 /= roundNumber;
-	for(int i=0; i < roundNumber; i++) ENq1 += Nq1[i];
 	ENq1 /= roundNumber;
-	for(int i=0; i < roundNumber; i++) ET2 += T2[i];
 	ET2 /= roundNumber;
-	for(int i=0; i < roundNumber; i++) EW2 += W2[i];
 	EW2 /= roundNumber;
-	for(int i=0; i < roundNumber; i++) ENq2 += Nq2[i];
 	ENq2 /= roundNumber;
+	
+	// Finding the standard deviations of the confidence intervals
+	for(int i=0; i < roundNumber; i++) { 
+		ST1 += pow(T1[i] - ET1, 2);
+		SW1 += pow(W1[i] - EW1, 2);
+		SX1 += pow(X1[i] - EX1, 2);
+		SNq1 += pow(Nq1[i] - ENq1, 2);
+		ST2 += pow(T2[i] - ET2, 2);
+		SW2 += pow(W2[i] - EW2, 2);
+		SNq2 += pow(Nq2[i] - ENq2, 2);
+	}
+	ST1 /= (roundNumber - 1);
+	SW1 /= (roundNumber - 1);
+	SX1 /= (roundNumber - 1);
+	SNq1 /= (roundNumber - 1);
+	ST2 /= (roundNumber - 1);
+	SW2 /= (roundNumber - 1);
+	SNq2 /= (roundNumber - 1);
 	
 	// Creates a file where all the averages of each round are stored
 	if (allow_logging) {
@@ -302,6 +331,14 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	cout << "\nE[T2]: " << ET2 << "\n";
 	cout << "\nE[W2]: " << EW2 << "\n";
 	cout << "\nE[Nq2]: " << ENq2 << "\n";
+	
+	cout << "\nS[T1]: " << ST1 << "\n";
+	cout << "\nS[W1]: " << SW1 << "\n";
+	cout << "\nS[X1]: " << SX1 << "\n";
+	cout << "\nS[Nq1]: " << SNq1 << "\n";
+	cout << "\nS[T2]: " << ST2 << "\n";
+	cout << "\nS[W2]: " << SW2 << "\n";
+	cout << "\nS[Nq2]: " << SNq2 << "\n";
 	
 }
 
