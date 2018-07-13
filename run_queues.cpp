@@ -82,6 +82,15 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 		VDelta[i] = 0;
 	}
 	
+	// Averages of the confidence intervals
+	float ET1 = 0;
+	float EW1 = 0;
+	float EX1 = 0;
+	float ENq1 = 0;
+	float ET2 = 0;
+	float EW2 = 0;
+	float ENq2 = 0;
+	
 	// Variables used for the areas method (Data Queue)
 	double time_data = 0; // data queue timestamps
 	int size_data; // data queue sizes
@@ -167,7 +176,9 @@ int bbbb = 0;
 				}
 				if (data_queue_prev > data_traffic->size) { // if a voice arrival increased the data queue, that means a data package was interrupted
 					Customer removed_customer = data_traffic->head_of_line->customer; // the data package that suffered interruption
-					removed_customer.checkpoint_time = simulation_time; // <<<<<<<<<<<<<<<<<<<<<<<<<<<<< PRECISO DAR UM JEITO DE ACESSAR ESSE CARA PRA FAZER ESSA ATUALIZACAO!!!!!!
+					removed_customer.time_in_service += (simulation_time - removed_customer.checkpoint_time);
+					removed_customer.checkpoint_time = simulation_time;
+					queue_return(data_traffic, removed_customer);
 					list_remove(event_list, removed_customer.id);
 				}
 				
@@ -180,6 +191,10 @@ int bbbb = 0;
 				}
 			} else if (current_event.etype == EXIT && current_event.customer.type == DATA){
 				T1[round] += (current_event.time - current_event.customer.arrival_time);
+				W1[round] += current_event.customer.time_in_queue;
+				current_event.customer.time_in_service += (simulation_time - current_event.customer.checkpoint_time);
+				X1[round] += current_event.customer.time_in_service;
+				
 				round_data_exits++;
 			} else if (current_event.etype == EXIT && current_event.customer.type == VOICE){
 				T2[round] += (current_event.time - current_event.customer.arrival_time);
@@ -216,6 +231,8 @@ int bbbb = 0;
 		
 		// Divide the sum of times by the number of events to find the average
 		if (round_data_exits > 0) T1[round] /= round_data_exits;
+		if (round_data_exits > 0) W1[round] /= round_data_exits;
+		if (round_data_exits > 0) X1[round] /= round_data_exits;
 		if (round_voice_exits > 0) T2[round] /= round_voice_exits;
 		if (round_voice_exits > 0) W2[round] /= round_voice_exits;
 	}
@@ -223,38 +240,45 @@ int bbbb = 0;
 	//cout << "\nqueue size: " << data_traffic->size;
 	//cout << "\na: " << aaaa << "\nb: " << bbbb << "\na-b: " << aaaa - bbbb << "\n";
 	
+	cout << "\nT1: [ ";
+	for (int i = 0; i < roundNumber-1; i++) cout << T1[i] << ", "; cout << T1[roundNumber-1] << " ]\n";
+	for(int i=0; i < roundNumber; i++) ET1 += T1[i];
+	ET1 /= roundNumber;
+	
+	cout << "\nW1: [ ";
+	for (int i = 0; i < roundNumber-1; i++) cout << W1[i] << ", "; cout << W1[roundNumber-1] << " ]\n";
+	for(int i=0; i < roundNumber; i++) EW1 += W1[i];
+	EW1 /= roundNumber;
+	
+	cout << "\nX1: [ ";
+	for (int i = 0; i < roundNumber-1; i++) cout << X1[i] << ", "; cout << X1[roundNumber-1] << " ]\n";
+	for(int i=0; i < roundNumber; i++) EX1 += X1[i];
+	EX1 /= roundNumber;
+	
 	cout << "\nNq1: [ ";
 	for (int i = 0; i < roundNumber-1; i++) cout << Nq1[i] << ", "; cout << Nq1[roundNumber-1] << " ]\n";
-	float ENq1 = 0;
 	for(int i=0; i < roundNumber; i++) ENq1 += Nq1[i];
 	ENq1 /= roundNumber;
 	
 	cout << "\nNq2: [ ";
 	for (int i = 0; i < roundNumber-1; i++) cout << Nq2[i] << ", "; cout << Nq2[roundNumber-1] << " ]\n";
-	float ENq2 = 0;
 	for(int i=0; i < roundNumber; i++) ENq2 += Nq2[i];
 	ENq2 /= roundNumber;
 	
-	cout << "\nT1: [ ";
-	for (int i = 0; i < roundNumber-1; i++) cout << T1[i] << ", "; cout << T1[roundNumber-1] << " ]\n";
-	float ET1 = 0;
-	for(int i=0; i < roundNumber; i++) ET1 += T1[i];
-	ET1 /= roundNumber;
-	
 	cout << "\nT2: [ ";
 	for (int i = 0; i < roundNumber-1; i++) cout << T2[i] << ", "; cout << T2[roundNumber-1] << " ]\n";
-	float ET2 = 0;
 	for(int i=0; i < roundNumber; i++) ET2 += T2[i];
 	ET2 /= roundNumber;
 	
 	cout << "\nW2: [ ";
 	for (int i = 0; i < roundNumber-1; i++) cout << W2[i] << ", "; cout << W2[roundNumber-1] << " ]\n";
-	float EW2 = 0;
 	for(int i=0; i < roundNumber; i++) EW2 += W2[i];
 	EW2 /= roundNumber;
 	
 	
 	cout << "\nE[T1]: " << ET1 << "\n";
+	cout << "\nE[W1]: " << EW1 << "\n";
+	cout << "\nE[X1]: " << EX1 << "\n";
 	cout << "\nE[Nq1]: " << ENq1 << "\n";
 	cout << "\nE[T2]: " << ET2 << "\n";
 	cout << "\nE[W2]: " << EW2 << "\n";
