@@ -44,7 +44,7 @@ Event removePackage(float simulation_time, Customer customer){
 }
 
 // It runs the rounds of the simulation
-void rounds(int transientPeriod, int customersNumber, int roundNumber, float serviceAverage1, float lambda, bool preemption){
+void rounds(int transientPeriod, int customersNumber, int roundNumber, float serviceAverage1, float lambda, bool preemption, bool allow_logging){
     queue* data_traffic = queue_create(); // Queue where the data packages are stored
     queue* voice_traffic = queue_create(); // Queue where the voice packages are stored
 	
@@ -117,9 +117,11 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 		list_insert(event_list, createSilencePeriod(simulation_time, 0, i));
 	}
 
-	//DEBUG FILE
-	ofstream myfile;
-	myfile.open ("log.txt");
+	//DEBUG FILES
+	ofstream log_file, averages_file;
+	if (allow_logging) {
+		log_file.open ("log.txt");
+	}
 
 	int simulation_percentage = -1;
 	cout << endl;
@@ -179,7 +181,7 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 					removed_customer.time_in_service += (simulation_time - removed_customer.checkpoint_time);
 					removed_customer.checkpoint_time = simulation_time;
 					queue_return(data_traffic, removed_customer);
-		myfile << "1 -- " << "REMOVED " << removed_customer.id << " FROM DATA QUEUE" << endl;
+					if (allow_logging) log_file << "1 -- " << "REMOVED " << removed_customer.id << " FROM DATA QUEUE" << endl;
 					list_remove(event_list, removed_customer.id);
 				}
 				
@@ -219,19 +221,21 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 			}
 			
 			//=======
-			myfile << "1 -- " << "TIME: " << current_event.time << "ms TYPE: ";
-			if (current_event.etype == ARRIVAL && current_event.customer.type == DATA) myfile << "Data Arrival";
-			else if (current_event.etype == ARRIVAL && current_event.customer.type == VOICE) myfile << "Voice Arrival";
-			else if (current_event.etype == SILENCE_END) myfile << "Silence End";
-			else if (current_event.etype == EXIT && current_event.customer.type == DATA) myfile << "Data Departure";
-			else if (current_event.etype == EXIT && current_event.customer.type == VOICE) myfile << "Voice Departure";
-			if (current_event.etype != SILENCE_END) myfile << " CUSTOMER ID: "<< (current_event.customer.id);
-			myfile << " CHANNEL ID: " << current_event.channel_id << "\n";
+			if (allow_logging) {
+				log_file << "1 -- " << "TIME: " << current_event.time << "ms TYPE: ";
+				if (current_event.etype == ARRIVAL && current_event.customer.type == DATA) log_file << "Data Arrival";
+				else if (current_event.etype == ARRIVAL && current_event.customer.type == VOICE) log_file << "Voice Arrival";
+				else if (current_event.etype == SILENCE_END) log_file << "Silence End";
+				else if (current_event.etype == EXIT && current_event.customer.type == DATA) log_file << "Data Departure";
+				else if (current_event.etype == EXIT && current_event.customer.type == VOICE) log_file << "Voice Departure";
+				if (current_event.etype != SILENCE_END) log_file << " CUSTOMER ID: "<< (current_event.customer.id);
+				log_file << " CHANNEL ID: " << current_event.channel_id << "\n";
+			}
 			//=======
 			
 		}
 		
-		myfile << "End of Round " << round << " ; Duration: " << (simulation_time - round_time) << "ms\n\n";
+		if (allow_logging) log_file << "End of Round " << round << " ; Duration: " << (simulation_time - round_time) << "ms\n\n";
 		// Areas Method requires dividing the area by the time spent
 		Nq1[round] /= (simulation_time - round_time);
 		Nq2[round] /= (simulation_time - round_time);
@@ -245,45 +249,52 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	}
 	cout << endl;
 	
-	//cout << "\nqueue size: " << data_traffic->size;
-	//cout << "\na: " << aaaa << "\nb: " << bbbb << "\na-b: " << aaaa - bbbb << "\n";
+	if (allow_logging) log_file.close();
 	
-	cout << "\nT1: [ ";
-	for (int i = 0; i < roundNumber-1; i++) cout << T1[i] << ", "; cout << T1[roundNumber-1] << " ]\n";
+	// Finding the averages of the confidence intervals
 	for(int i=0; i < roundNumber; i++) ET1 += T1[i];
 	ET1 /= roundNumber;
-	
-	cout << "\nW1: [ ";
-	for (int i = 0; i < roundNumber-1; i++) cout << W1[i] << ", "; cout << W1[roundNumber-1] << " ]\n";
 	for(int i=0; i < roundNumber; i++) EW1 += W1[i];
 	EW1 /= roundNumber;
-	
-	cout << "\nX1: [ ";
-	for (int i = 0; i < roundNumber-1; i++) cout << X1[i] << ", "; cout << X1[roundNumber-1] << " ]\n";
 	for(int i=0; i < roundNumber; i++) EX1 += X1[i];
 	EX1 /= roundNumber;
-	
-	cout << "\nNq1: [ ";
-	for (int i = 0; i < roundNumber-1; i++) cout << Nq1[i] << ", "; cout << Nq1[roundNumber-1] << " ]\n";
 	for(int i=0; i < roundNumber; i++) ENq1 += Nq1[i];
 	ENq1 /= roundNumber;
-	
-	cout << "\nNq2: [ ";
-	for (int i = 0; i < roundNumber-1; i++) cout << Nq2[i] << ", "; cout << Nq2[roundNumber-1] << " ]\n";
+	for(int i=0; i < roundNumber; i++) ET2 += T2[i];
+	ET2 /= roundNumber;
+	for(int i=0; i < roundNumber; i++) EW2 += W2[i];
+	EW2 /= roundNumber;
 	for(int i=0; i < roundNumber; i++) ENq2 += Nq2[i];
 	ENq2 /= roundNumber;
 	
-	cout << "\nT2: [ ";
-	for (int i = 0; i < roundNumber-1; i++) cout << T2[i] << ", "; cout << T2[roundNumber-1] << " ]\n";
-	for(int i=0; i < roundNumber; i++) ET2 += T2[i];
-	ET2 /= roundNumber;
+	// Creates a file where all the averages of each round are stored
+	if (allow_logging) {
+		averages_file.open ("averages.txt");
+		averages_file << "\nT1: [ ";
+		for (int i = 0; i < roundNumber-1; i++) averages_file << T1[i] << ", "; averages_file << T1[roundNumber-1] << " ]\n";
+		
+		averages_file << "\nW1: [ ";
+		for (int i = 0; i < roundNumber-1; i++) averages_file << W1[i] << ", "; averages_file << W1[roundNumber-1] << " ]\n";
+		
+		averages_file << "\nX1: [ ";
+		for (int i = 0; i < roundNumber-1; i++) averages_file << X1[i] << ", "; averages_file << X1[roundNumber-1] << " ]\n";
+		
+		averages_file << "\nNq1: [ ";
+		for (int i = 0; i < roundNumber-1; i++) averages_file << Nq1[i] << ", "; averages_file << Nq1[roundNumber-1] << " ]\n";
+		
+		averages_file << "\nT2: [ ";
+		for (int i = 0; i < roundNumber-1; i++) averages_file << T2[i] << ", "; averages_file << T2[roundNumber-1] << " ]\n";
+		
+		averages_file << "\nW2: [ ";
+		for (int i = 0; i < roundNumber-1; i++) averages_file << W2[i] << ", "; averages_file << W2[roundNumber-1] << " ]\n";
+		
+		averages_file << "\nNq2: [ ";
+		for (int i = 0; i < roundNumber-1; i++) averages_file << Nq2[i] << ", "; averages_file << Nq2[roundNumber-1] << " ]\n";
+		
+		averages_file.close();
+	}
 	
-	cout << "\nW2: [ ";
-	for (int i = 0; i < roundNumber-1; i++) cout << W2[i] << ", "; cout << W2[roundNumber-1] << " ]\n";
-	for(int i=0; i < roundNumber; i++) EW2 += W2[i];
-	EW2 /= roundNumber;
-	
-	
+	// Prints the results
 	cout << "\nE[T1]: " << ET1 << "\n";
 	cout << "\nE[W1]: " << EW1 << "\n";
 	cout << "\nE[X1]: " << EX1 << "\n";
@@ -294,10 +305,10 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	
 }
 
-void execution(int transientPeriod, int customersNumber, int roundNumber, float utilization1, bool preemption){
+void execution(int transientPeriod, int customersNumber, int roundNumber, float utilization1, bool preemption, bool allow_logging){
     // The service 1 average time is going to be the package size average divided by the transmission rate
     float serviceAverage1 = (float) (755 * 8) / (float) (0.002 * 1024 * 1024);
     float lambda = utilization1 / serviceAverage1;
     // Starts rounds
-    rounds(transientPeriod, customersNumber, roundNumber, serviceAverage1, lambda, preemption);
+    rounds(transientPeriod, customersNumber, roundNumber, serviceAverage1, lambda, preemption, allow_logging);
 }
