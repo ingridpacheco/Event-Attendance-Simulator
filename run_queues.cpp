@@ -82,14 +82,16 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 		VDelta[i] = 0;
 	}
 	
-	// Averages of the confidence intervals
-	float ET1 = 0;
-	float EW1 = 0;
-	float EX1 = 0;
-	float ENq1 = 0;
-	float ET2 = 0;
-	float EW2 = 0;
-	float ENq2 = 0;
+	// Averages, lower limits and upper limits of the confidence intervals
+	float ET1 = 0, lower_T1, upper_T1;
+	float EW1 = 0, lower_W1, upper_W1;
+	float EX1 = 0, lower_X1, upper_X1;
+	float ENq1 = 0, lower_Nq1, upper_Nq1;
+	float ET2 = 0, lower_T2, upper_T2;
+	float EW2 = 0, lower_W2, upper_W2;
+	float ENq2 = 0, lower_Nq2, upper_Nq2;
+	float EEDelta = 0, lower_EDelta, upper_EDelta;
+	float EVDelta = 0, lower_VDelta, upper_VDelta;
 	
 	// Standard deviations of the confidence intervals
 	float ST1 = 0;
@@ -99,6 +101,8 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	float ST2 = 0;
 	float SW2 = 0;
 	float SNq2 = 0;
+	float SEDelta = 0;
+	float SVDelta = 0;
 	
 	// Variables used for the areas method (Data Queue)
 	double time_data = 0; // data queue timestamps
@@ -269,6 +273,8 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 		ET2 += T2[i];
 		EW2 += W2[i];
 		ENq2 += Nq2[i];
+		EEDelta += EDelta[i];
+		EVDelta += VDelta[i];
 	}
 	ET1 /= roundNumber;
 	EW1 /= roundNumber;
@@ -277,6 +283,8 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	ET2 /= roundNumber;
 	EW2 /= roundNumber;
 	ENq2 /= roundNumber;
+	EEDelta /= roundNumber;
+	EVDelta /= roundNumber;
 	
 	// Finding the standard deviations of the confidence intervals
 	for(int i=0; i < roundNumber; i++) { 
@@ -289,12 +297,35 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 		SNq2 += pow(Nq2[i] - ENq2, 2);
 	}
 	ST1 /= (roundNumber - 1);
+	ST1 = sqrt(ST1);
 	SW1 /= (roundNumber - 1);
+	SW1 = sqrt(SW1);
 	SX1 /= (roundNumber - 1);
+	SX1 = sqrt(SX1);
 	SNq1 /= (roundNumber - 1);
+	SNq1 = sqrt(SNq1);
 	ST2 /= (roundNumber - 1);
+	ST2 = sqrt(ST2);
 	SW2 /= (roundNumber - 1);
+	SW2 = sqrt(SW2);
 	SNq2 /= (roundNumber - 1);
+	SNq2 = sqrt(SNq2);
+	SEDelta /= (roundNumber - 1);
+	SEDelta = sqrt(SEDelta);
+	SVDelta /= (roundNumber - 1);
+	SVDelta = sqrt(SVDelta);
+	
+	// Finding the confidence intervals
+	lower_T1 = ET1 - 1.645 * ST1 / sqrt(roundNumber); upper_T1 = ET1 + 1.645 * ST1 / sqrt(roundNumber);
+	lower_W1 = EW1 - 1.645 * SW1 / sqrt(roundNumber); upper_W1 = EW1 + 1.645 * SW1 / sqrt(roundNumber);
+	lower_X1 = EX1 - 1.645 * SX1 / sqrt(roundNumber); upper_X1 = EX1 + 1.645 * SX1 / sqrt(roundNumber);
+	lower_Nq1 = ENq1 - 1.645 * SNq1 / sqrt(roundNumber); upper_Nq1 = ENq1 + 1.645 * SNq1 / sqrt(roundNumber);
+	lower_T2 = ET2 - 1.645 * ST2 / sqrt(roundNumber); upper_T2 = ET2 + 1.645 * ST2 / sqrt(roundNumber);
+	lower_W2 = EW2 - 1.645 * SW2 / sqrt(roundNumber); upper_W2 = EW2 + 1.645 * SW2 / sqrt(roundNumber);
+	lower_Nq2 = ENq2 - 1.645 * SNq2 / sqrt(roundNumber); upper_Nq2 = ENq2 + 1.645 * SNq2 / sqrt(roundNumber);
+	lower_EDelta = EEDelta - 1.645 * SEDelta / sqrt(roundNumber); upper_EDelta = EEDelta + 1.645 * SEDelta / sqrt(roundNumber);
+	lower_VDelta = EVDelta - 1.645 * SVDelta / sqrt(roundNumber); upper_VDelta = EVDelta + 1.645 * SVDelta / sqrt(roundNumber);
+	
 	
 	// Creates a file where all the averages of each round are stored
 	if (allow_logging) {
@@ -320,25 +351,26 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 		averages_file << "\nNq2: [ ";
 		for (int i = 0; i < roundNumber-1; i++) averages_file << Nq2[i] << ", "; averages_file << Nq2[roundNumber-1] << " ]\n";
 		
+		averages_file << "\nE[Delta]: [ ";
+		for (int i = 0; i < roundNumber-1; i++) averages_file << EDelta[i] << ", "; averages_file << EDelta[roundNumber-1] << " ]\n";
+		
+		averages_file << "\nV[Delta]: [ ";
+		for (int i = 0; i < roundNumber-1; i++) averages_file << VDelta[i] << ", "; averages_file << VDelta[roundNumber-1] << " ]\n";
+		
 		averages_file.close();
 	}
 	
 	// Prints the results
-	cout << "\nE[T1]: " << ET1 << "\n";
-	cout << "\nE[W1]: " << EW1 << "\n";
-	cout << "\nE[X1]: " << EX1 << "\n";
-	cout << "\nE[Nq1]: " << ENq1 << "\n";
-	cout << "\nE[T2]: " << ET2 << "\n";
-	cout << "\nE[W2]: " << EW2 << "\n";
-	cout << "\nE[Nq2]: " << ENq2 << "\n";
-	
-	cout << "\nS[T1]: " << ST1 << "\n";
-	cout << "\nS[W1]: " << SW1 << "\n";
-	cout << "\nS[X1]: " << SX1 << "\n";
-	cout << "\nS[Nq1]: " << SNq1 << "\n";
-	cout << "\nS[T2]: " << ST2 << "\n";
-	cout << "\nS[W2]: " << SW2 << "\n";
-	cout << "\nS[Nq2]: " << SNq2 << "\n";
+	cout << "Intervalos de confianca: " << endl;
+	cout << "\nE[T1]: " << lower_T1 << " < " << ET1 << " < " << upper_T1 << endl;
+	cout << "\nE[W1]: " << lower_W1 << " < " << EW1 << " < " << upper_W1 << endl;
+	cout << "\nE[X1]: " << lower_X1 << " < " << EX1 << " < " << upper_X1 << endl;
+	cout << "\nE[Nq1]: " << lower_Nq1 << " < " << ENq1 << " < " << upper_Nq1 << endl;
+	cout << "\nE[T2]: " << lower_T2 << " < " << ET2 << " < " << upper_T2 << endl;
+	cout << "\nE[W2]: " << lower_W2 << " < " << EW2 << " < " << upper_W2 << endl;
+	cout << "\nE[Nq2]: " << lower_Nq2 << " < " << ENq2 << " < " << upper_Nq2 << endl;
+	cout << "\nE[Delta]: " << lower_EDelta << " < " << EEDelta << " < " << upper_EDelta << endl;
+	cout << "\nV[Delta]: " << lower_VDelta << " < " << EVDelta << " < " << upper_VDelta << endl;
 	
 }
 
