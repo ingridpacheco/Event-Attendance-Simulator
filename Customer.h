@@ -15,6 +15,7 @@ typedef enum {
 class Customer {
 	public:
 		int id;
+		int round; // the round in which this customer joined the queue
 		double arrival_time; // when this customer joined the queue
 		double checkpoint_time; // used to know when was the last time this customer was sent to the queue/server
 		customer_type type;
@@ -25,7 +26,7 @@ class Customer {
 		int size; // in bits
 		// Customer(customer_type type, double arrival_time);
 		Customer();
-		Customer(int id, customer_type type, double arrival_time);
+		Customer(int id, int round, customer_type type, double arrival_time);
 };
 
 // Function that determines the size of a data package in bytes (actual function)

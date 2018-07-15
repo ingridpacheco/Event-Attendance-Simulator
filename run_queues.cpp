@@ -16,16 +16,16 @@ int voice_package_number() {
 }
 
 // Creates the arrival event of a data customer 
-Event createData(int customer_id, float simulation_time, float lambda){
+Event createData(int customer_id, int round, float simulation_time, float lambda){
 	double arrivalTime = exponential(lambda);
-	Customer customer = Customer(customer_id, DATA, simulation_time + arrivalTime);
+	Customer customer = Customer(customer_id, round, DATA, simulation_time + arrivalTime);
 	Event event = Event(simulation_time + arrivalTime, customer, ARRIVAL);
 	return event;
 }
 
 // Creates the arrival event of a voice customer 
-Event createVoice(int customer_id, float simulation_time, float offset, int channel_id){
-	Customer customer = Customer(customer_id, VOICE, simulation_time + offset);
+Event createVoice(int customer_id, int round, float simulation_time, float offset, int channel_id){
+	Customer customer = Customer(customer_id, round, VOICE, simulation_time + offset);
 	Event event = Event(simulation_time + offset, customer, ARRIVAL, channel_id);
 	return event;
 }
@@ -121,8 +121,8 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	int size_data; // data queue sizes
 	
 	// Variables used for the areas method (Voice Queue)
-	double time_voice = 0; // data queue timestamps
-	int size_voice; // data queue sizes
+	double time_voice = 0; // voice queue timestamps
+	int size_voice; // voice queue sizes
 	
     // People that came out of the system coming from both Queues;
     int out1 = 0; // data packages
@@ -135,12 +135,18 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 
 	list<Event> event_list;
 
-	list_insert(event_list, createData(Customer::totalCustomers++, simulation_time, lambda));
+	list_insert(event_list, createData(Customer::totalCustomers++, 0, simulation_time, lambda));
 
 	// VOICE CHANNELS
 	for(int i = 0; i < 30; i++) {
 		list_insert(event_list, createSilencePeriod(simulation_time, 0, i));
 	}
+	
+	// Number of packages created in each round that eventually left the system
+	int round_data_exits[roundNumber];
+	for (int i = 0; i < roundNumber; i++) round_data_exits[i] = 0;
+	int round_voice_exits[roundNumber];
+	for (int i = 0; i < roundNumber; i++) round_voice_exits[i] = 0;
 
 	//DEBUG FILES
 	ofstream log_file, averages_file;
@@ -154,8 +160,6 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	for (int round = 0; round < roundNumber; round++) {
 		//--- Variables needed to calculate the statistics for each round ---//
 		double round_time = simulation_time;
-		int round_data_exits = 0;
-		int round_voice_exits = 0;
 		//-----------------------------------------------------------------//
 		while (Customer::totalCustomers < customersNumber * (round+1)) {
 			Event current_event = *event_list.begin();
@@ -193,11 +197,11 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 			
 			
 			if (current_event.etype == ARRIVAL && current_event.customer.type == DATA) {
-				list_insert(event_list, createData(-99999, simulation_time, lambda)); // next data package
+				list_insert(event_list, createData(-99999, round, simulation_time, lambda)); // next data package
 			} else if (current_event.etype == ARRIVAL && current_event.customer.type == VOICE){
 				if (voice_channels[current_event.channel_id] > 0) {
 					voice_channels[current_event.channel_id]--;
-					list_insert(event_list, createVoice(-99999, simulation_time, 16, current_event.channel_id)); // next voice package of this channel
+					list_insert(event_list, createVoice(-99999, round, simulation_time, 16, current_event.channel_id)); // next voice package of this channel
 				} else {
 					list_insert(event_list, createSilencePeriod(simulation_time, 16, current_event.channel_id)); // starts next silence period 16ms later
 				}
@@ -215,20 +219,20 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 				//cout << "Channel " << current_event.channel_id << " will generate: " << voice_channels[current_event.channel_id] << " voice packages!\n";
 				if (voice_channels[current_event.channel_id] > 0) {
 					voice_channels[current_event.channel_id]--;
-					list_insert(event_list, createVoice(-99999, simulation_time, 0, current_event.channel_id)); // next voice package of this channel
+					list_insert(event_list, createVoice(-99999, round, simulation_time, 0, current_event.channel_id)); // next voice package of this channel
 				}
 			} else if (current_event.etype == EXIT && current_event.customer.type == DATA){
-				T1[round] += (current_event.time - current_event.customer.arrival_time);
-				W1[round] += current_event.customer.time_in_queue;
+				T1[current_event.customer.round] += (current_event.time - current_event.customer.arrival_time);
+				W1[current_event.customer.round] += current_event.customer.time_in_queue;
 				current_event.customer.time_in_service += (simulation_time - current_event.customer.checkpoint_time);
-				X1[round] += current_event.customer.time_in_service;
+				X1[current_event.customer.round] += current_event.customer.time_in_service;
 				
-				round_data_exits++;
+				round_data_exits[current_event.customer.round]++;
 			} else if (current_event.etype == EXIT && current_event.customer.type == VOICE){
-				T2[round] += (current_event.time - current_event.customer.arrival_time);
-				W2[round] += current_event.customer.time_in_queue;
+				T2[current_event.customer.round] += (current_event.time - current_event.customer.arrival_time);
+				W2[current_event.customer.round] += current_event.customer.time_in_queue;
 
-				round_voice_exits++;
+				round_voice_exits[current_event.customer.round]++;
 			}
 			if (customer_being_served.id != c_prev.id) { // checks if a new customer arrived at the server due to this event
 				if (customer_being_served.type != NONE) {
@@ -290,12 +294,30 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 		if (round_voice_exits > 0) W2[round] /= round_voice_exits;
 
 	}
+	
+	// Divide the sum of times by the number of events to find the average
+	for (int round = 0; round < roundNumber; round++) {
+		if (round_data_exits[round] > 0) {
+			T1[round] /= round_data_exits[round];
+			W1[round] /= round_data_exits[round];
+			X1[round] /= round_data_exits[round];
+		}
+		if (round_voice_exits[round] > 0) {
+			T2[round] /= round_voice_exits[round];
+			W2[round] /= round_voice_exits[round];
+		}
+	}
+	
 	cout << endl;
 	
 	if (allow_logging) log_file.close();
-
-	// Finding the averages of the confidence intervals
+	
+	// ----- Finding the averages of the confidence intervals ----- //
+	// Only rounds from which at least one package left the system are eligible for certain statistics.
+	int eligible_data_rounds = 0, eligible_voice_rounds = 0;
 	for(int i=0; i < roundNumber; i++) { 
+		if (round_data_exits[i] > 0) eligible_data_rounds++;
+		if (round_voice_exits[i] > 0) eligible_voice_rounds++;
 		ET1 += T1[i];
 		EW1 += W1[i];
 		EX1 += X1[i];
@@ -306,12 +328,12 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 		EEDelta += EDelta[i];
 		EVDelta += VDelta[i];
 	}
-	ET1 /= roundNumber;
-	EW1 /= roundNumber;
-	EX1 /= roundNumber;
+	ET1 /= eligible_data_rounds;
+	EW1 /= eligible_data_rounds;
+	EX1 /= eligible_data_rounds;
 	ENq1 /= roundNumber;
-	ET2 /= roundNumber;
-	EW2 /= roundNumber;
+	ET2 /= eligible_voice_rounds;
+	EW2 /= eligible_voice_rounds;
 	ENq2 /= roundNumber;
 	EEDelta /= roundNumber;
 	EVDelta /= roundNumber;
@@ -345,16 +367,17 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	SVDelta /= (roundNumber - 1);
 	SVDelta = sqrt(SVDelta);
 	
-	// Finding the confidence intervals
-	lower_T1 = ET1 - 1.645 * ST1 / sqrt(roundNumber); upper_T1 = ET1 + 1.645 * ST1 / sqrt(roundNumber);
-	lower_W1 = EW1 - 1.645 * SW1 / sqrt(roundNumber); upper_W1 = EW1 + 1.645 * SW1 / sqrt(roundNumber);
-	lower_X1 = EX1 - 1.645 * SX1 / sqrt(roundNumber); upper_X1 = EX1 + 1.645 * SX1 / sqrt(roundNumber);
-	lower_Nq1 = ENq1 - 1.645 * SNq1 / sqrt(roundNumber); upper_Nq1 = ENq1 + 1.645 * SNq1 / sqrt(roundNumber);
-	lower_T2 = ET2 - 1.645 * ST2 / sqrt(roundNumber); upper_T2 = ET2 + 1.645 * ST2 / sqrt(roundNumber);
-	lower_W2 = EW2 - 1.645 * SW2 / sqrt(roundNumber); upper_W2 = EW2 + 1.645 * SW2 / sqrt(roundNumber);
-	lower_Nq2 = ENq2 - 1.645 * SNq2 / sqrt(roundNumber); upper_Nq2 = ENq2 + 1.645 * SNq2 / sqrt(roundNumber);
-	lower_EDelta = EEDelta - 1.645 * SEDelta / sqrt(roundNumber); upper_EDelta = EEDelta + 1.645 * SEDelta / sqrt(roundNumber);
-	lower_VDelta = EVDelta - 1.645 * SVDelta / sqrt(roundNumber); upper_VDelta = EVDelta + 1.645 * SVDelta / sqrt(roundNumber);
+	// Finding the confidence intervals.
+	// Lower limits must always be non-negative.
+	lower_T1 = ET1 - 1.645 * ST1 / sqrt(roundNumber); lower_T1 = (lower_T1 > 0) ? lower_T1 : 0; upper_T1 = ET1 + 1.645 * ST1 / sqrt(roundNumber);
+	lower_W1 = EW1 - 1.645 * SW1 / sqrt(roundNumber); lower_W1 = (lower_W1 > 0) ? lower_W1 : 0; upper_W1 = EW1 + 1.645 * SW1 / sqrt(roundNumber);
+	lower_X1 = EX1 - 1.645 * SX1 / sqrt(roundNumber); lower_X1 = (lower_X1 > 0) ? lower_X1 : 0; upper_X1 = EX1 + 1.645 * SX1 / sqrt(roundNumber);
+	lower_Nq1 = ENq1 - 1.645 * SNq1 / sqrt(roundNumber); lower_Nq1 = (lower_Nq1 > 0) ? lower_Nq1 : 0; upper_Nq1 = ENq1 + 1.645 * SNq1 / sqrt(roundNumber);
+	lower_T2 = ET2 - 1.645 * ST2 / sqrt(roundNumber); lower_T2 = (lower_T2 > 0) ? lower_T2 : 0; upper_T2 = ET2 + 1.645 * ST2 / sqrt(roundNumber);
+	lower_W2 = EW2 - 1.645 * SW2 / sqrt(roundNumber); lower_W2 = (lower_W2 > 0) ? lower_W2 : 0; upper_W2 = EW2 + 1.645 * SW2 / sqrt(roundNumber);
+	lower_Nq2 = ENq2 - 1.645 * SNq2 / sqrt(roundNumber); lower_Nq2 = (lower_Nq2 > 0) ? lower_Nq2 : 0; upper_Nq2 = ENq2 + 1.645 * SNq2 / sqrt(roundNumber);
+	lower_EDelta = EEDelta - 1.645 * SEDelta / sqrt(roundNumber); lower_EDelta = (lower_EDelta > 0) ? lower_EDelta : 0; upper_EDelta = EEDelta + 1.645 * SEDelta / sqrt(roundNumber);
+	lower_VDelta = EVDelta - 1.645 * SVDelta / sqrt(roundNumber); lower_VDelta = (lower_VDelta > 0) ? lower_VDelta : 0; upper_VDelta = EVDelta + 1.645 * SVDelta / sqrt(roundNumber);
 	
 	
 	// Creates a file where all the averages of each round are stored

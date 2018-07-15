@@ -19,6 +19,7 @@ Customer::Customer(customer_type type, double arrival_time) {
 
 Customer::Customer() {
 	this->id = -99999;
+	this->round = -99999;
 	this->type = NONE;
 	this->size = 0;
 	this->service_time = 0;
@@ -29,8 +30,9 @@ Customer::Customer() {
 }
 
 // Defines a Customer with identification
-Customer::Customer(int id, customer_type type, double arrival_time) {
+Customer::Customer(int id, int round, customer_type type, double arrival_time) {
 	this->id = id;
+	this->round = round;
 	this->type = type;
 	if (type == DATA) this->size = data_package_size() * 8;
 	else if (type == VOICE) this->size = 512;
