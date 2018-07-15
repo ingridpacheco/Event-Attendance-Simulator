@@ -47,8 +47,20 @@ Event removePackage(float simulation_time, Customer customer){
 void rounds(int transientPeriod, int customersNumber, int roundNumber, float serviceAverage1, float lambda, bool preemption, bool allow_logging){
     queue* data_traffic = queue_create(); // Queue where the data packages are stored
     queue* voice_traffic = queue_create(); // Queue where the voice packages are stored
-	
+
 	double simulation_time = 0; // Current time in the simulator
+	double lastTime[30]; //Keeps the last time a package of each specific channel entered the server
+
+	// Gets the intervals of each channel;
+	double intervals[30];
+
+	for (int i = 0; i < 30; i++){
+		lastTime[i] = 0;
+		intervals[i] = 0;
+	}
+
+	// Gets the total quantity of intervals;
+	int totalIntervals = 0;
 	
 	// Since we must ignore the first transientPeriod customers, only customers considered will be the ones with id >= 0
 	// and we'll start counting from -transientPeriod
@@ -222,6 +234,13 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 				if (customer_being_served.type != NONE) {
 					customer_being_served.time_in_queue += (simulation_time - customer_being_served.checkpoint_time);
 					customer_being_served.checkpoint_time = simulation_time;
+					if((current_event.customer.id == customer_being_served.id) && current_event.customer.type == VOICE){
+						if (lastTime[current_event.channel_id] != 0){
+							intervals[current_event.channel_id] += (customer_being_served.checkpoint_time - lastTime[current_event.channel_id]);
+							totalIntervals += 1;
+						}
+						lastTime[current_event.channel_id] = customer_being_served.checkpoint_time;
+					}
 					list_insert(event_list, removePackage(simulation_time, customer_being_served));
 				}
 			}
@@ -252,6 +271,16 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 		// Areas Method requires dividing the area by the time spent
 		Nq1[round] /= (simulation_time - round_time);
 		Nq2[round] /= (simulation_time - round_time);
+
+		for (int i = 0; i < 30; i++){
+			EDelta[round] += intervals[i];
+			intervals[i] = 0;
+		}
+		if (totalIntervals != 0){
+			EDelta[round] = EDelta[round]/totalIntervals;
+			totalIntervals = 0;
+		}
+		//cout << " TOTAL: " << totalIntervals << " EDELTA: " << EDelta[round] << "\n";
 		
 		// Divide the sum of times by the number of events to find the average
 		if (round_data_exits > 0) T1[round] /= round_data_exits;
@@ -259,11 +288,12 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 		if (round_data_exits > 0) X1[round] /= round_data_exits;
 		if (round_voice_exits > 0) T2[round] /= round_voice_exits;
 		if (round_voice_exits > 0) W2[round] /= round_voice_exits;
+
 	}
 	cout << endl;
 	
 	if (allow_logging) log_file.close();
-	
+
 	// Finding the averages of the confidence intervals
 	for(int i=0; i < roundNumber; i++) { 
 		ET1 += T1[i];
