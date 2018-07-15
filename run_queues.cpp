@@ -62,24 +62,24 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	
 	// Since we must ignore the first transientPeriod customers, only customers considered will be the ones with id >= 0
 	// and we'll start counting from -transientPeriod
-	//Customer::totalCustomers = -transientPeriod; 
+	Customer::totalCustomers = -transientPeriod; 
 	
 	Customer customer_being_served = Customer(); // The customer currently in the server. NONE type = no customer there.
 
     // Expectations/Averages
-	float T1[roundNumber]; // Average time a data package stays in the system
-	float W1[roundNumber]; // Average time a data package stays in the queue
-	float X1[roundNumber]; // Average time a data package stays in the server
-    float Nq1[roundNumber]; // Average number of data packages in the queue
-	float T2[roundNumber]; // Average time a voice package stays in the system
-	float W2[roundNumber]; // Average time a voice package stays in the queue
-    float Nq2[roundNumber]; // Average number of voice packages in the queue
+	float T1[roundNumber+1]; // Average time a data package stays in the system
+	float W1[roundNumber+1]; // Average time a data package stays in the queue
+	float X1[roundNumber+1]; // Average time a data package stays in the server
+    float Nq1[roundNumber+1]; // Average number of data packages in the queue
+	float T2[roundNumber+1]; // Average time a voice package stays in the system
+	float W2[roundNumber+1]; // Average time a voice package stays in the queue
+    float Nq2[roundNumber+1]; // Average number of voice packages in the queue
 	
 	// Interval between packages Estimator
-    float EDelta[roundNumber];
-    float VDelta[roundNumber];
+    float EDelta[roundNumber+1];
+    float VDelta[roundNumber+1];
 
-	for (int i = 0; i < roundNumber; i++) {
+	for (int i = 0; i < roundNumber+1; i++) {
 		T1[i] = 0;
 		W1[i] = 0;
 		X1[i] = 0;
@@ -141,18 +141,21 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	}
 	
 	// Number of packages created in each round that eventually left the system
-	int round_data_exits[roundNumber];
-	for (int i = 0; i < roundNumber; i++) round_data_exits[i] = 0;
-	int round_voice_exits[roundNumber];
-	for (int i = 0; i < roundNumber; i++) round_voice_exits[i] = 0;
+	int round_data_exits[roundNumber+1];
+	for (int i = 0; i < roundNumber+1; i++) round_data_exits[i] = 0;
+	int round_voice_exits[roundNumber+1];
+	for (int i = 0; i < roundNumber+1; i++) round_voice_exits[i] = 0;
 
 	//DEBUG FILES
 	ofstream log_file, averages_file;
 
 	int simulation_percentage = -1;
 	cout << endl;
+	
+	cout << "Simulation in progress... 0%\r";
+	
 	// Main loop of events
-	for (int round = 0; round < roundNumber; round++) {
+	for (int round = 0; round < roundNumber+1; round++) {
 		//--- Variables needed to calculate the statistics for each round ---//
 		double round_time = simulation_time;
 		//-----------------------------------------------------------------//
@@ -162,7 +165,8 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 			sstm << "log_" << round << ".txt";
 			log_file.open (sstm.str().c_str());
 		}
-		while (Customer::totalCustomers < customersNumber * (round+1)) {
+		// Loops until customersNumber customers are sampled or, if this is round 0, until the transientPeriod customers are sampled
+		while ((round > 0 && Customer::totalCustomers < customersNumber * (round+1)) || (round == 0 && Customer::totalCustomers < 0)) {
 			Event current_event = *event_list.begin();
 			
 			event_list.erase(event_list.begin());
@@ -253,7 +257,7 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 			
 			
 			// Percentage of simulation complete
-			if (simulation_percentage != (int)((float) Customer::totalCustomers * 100 / (customersNumber * roundNumber))) {
+			if (Customer::totalCustomers > 0 && simulation_percentage != (int)((float) Customer::totalCustomers * 100 / (customersNumber * roundNumber))) {
 				cout << "Simulation in progress... " << (int)((float) Customer::totalCustomers * 100 / (customersNumber * roundNumber)) << "%" << '\r';
 				simulation_percentage = (int)((float) Customer::totalCustomers * 100 / (customersNumber * roundNumber));
 			}
@@ -303,7 +307,7 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	}
 	
 	// Divide the sum of times by the number of events to find the average
-	for (int round = 0; round < roundNumber; round++) {
+	for (int round = 0; round < roundNumber+1; round++) {
 		if (round_data_exits[round] > 0) {
 			T1[round] /= round_data_exits[round];
 			W1[round] /= round_data_exits[round];
@@ -320,7 +324,7 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	// ----- Finding the averages of the confidence intervals ----- //
 	// Only rounds from which at least one package left the system are eligible for certain statistics.
 	int eligible_data_rounds = 0, eligible_voice_rounds = 0;
-	for(int i=0; i < roundNumber; i++) { 
+	for(int i=1; i < roundNumber+1; i++) { 
 		if (round_data_exits[i] > 0) eligible_data_rounds++;
 		if (round_voice_exits[i] > 0) eligible_voice_rounds++;
 		ET1 += T1[i];
@@ -344,7 +348,7 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	EVDelta /= roundNumber;
 	
 	// Finding the standard deviations of the confidence intervals
-	for(int i=0; i < roundNumber; i++) { 
+	for(int i=1; i < roundNumber+1; i++) { 
 		ST1 += pow(T1[i] - ET1, 2);
 		SW1 += pow(W1[i] - EW1, 2);
 		SX1 += pow(X1[i] - EX1, 2);
@@ -391,31 +395,31 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	if (allow_logging) {
 		averages_file.open ("averages.txt");
 		averages_file << "\nT1: [ ";
-		for (int i = 0; i < roundNumber-1; i++) averages_file << T1[i] << ", "; averages_file << T1[roundNumber-1] << " ]\n";
+		for (int i = 0; i < roundNumber; i++) averages_file << T1[i] << ", "; averages_file << T1[roundNumber] << " ]\n";
 		
 		averages_file << "\nW1: [ ";
-		for (int i = 0; i < roundNumber-1; i++) averages_file << W1[i] << ", "; averages_file << W1[roundNumber-1] << " ]\n";
+		for (int i = 0; i < roundNumber; i++) averages_file << W1[i] << ", "; averages_file << W1[roundNumber] << " ]\n";
 		
 		averages_file << "\nX1: [ ";
-		for (int i = 0; i < roundNumber-1; i++) averages_file << X1[i] << ", "; averages_file << X1[roundNumber-1] << " ]\n";
+		for (int i = 0; i < roundNumber; i++) averages_file << X1[i] << ", "; averages_file << X1[roundNumber] << " ]\n";
 		
 		averages_file << "\nNq1: [ ";
-		for (int i = 0; i < roundNumber-1; i++) averages_file << Nq1[i] << ", "; averages_file << Nq1[roundNumber-1] << " ]\n";
+		for (int i = 0; i < roundNumber; i++) averages_file << Nq1[i] << ", "; averages_file << Nq1[roundNumber] << " ]\n";
 		
 		averages_file << "\nT2: [ ";
-		for (int i = 0; i < roundNumber-1; i++) averages_file << T2[i] << ", "; averages_file << T2[roundNumber-1] << " ]\n";
+		for (int i = 0; i < roundNumber; i++) averages_file << T2[i] << ", "; averages_file << T2[roundNumber] << " ]\n";
 		
 		averages_file << "\nW2: [ ";
-		for (int i = 0; i < roundNumber-1; i++) averages_file << W2[i] << ", "; averages_file << W2[roundNumber-1] << " ]\n";
+		for (int i = 0; i < roundNumber; i++) averages_file << W2[i] << ", "; averages_file << W2[roundNumber] << " ]\n";
 		
 		averages_file << "\nNq2: [ ";
-		for (int i = 0; i < roundNumber-1; i++) averages_file << Nq2[i] << ", "; averages_file << Nq2[roundNumber-1] << " ]\n";
+		for (int i = 0; i < roundNumber; i++) averages_file << Nq2[i] << ", "; averages_file << Nq2[roundNumber] << " ]\n";
 		
 		averages_file << "\nE[Delta]: [ ";
-		for (int i = 0; i < roundNumber-1; i++) averages_file << EDelta[i] << ", "; averages_file << EDelta[roundNumber-1] << " ]\n";
+		for (int i = 0; i < roundNumber; i++) averages_file << EDelta[i] << ", "; averages_file << EDelta[roundNumber] << " ]\n";
 		
 		averages_file << "\nV[Delta]: [ ";
-		for (int i = 0; i < roundNumber-1; i++) averages_file << VDelta[i] << ", "; averages_file << VDelta[roundNumber-1] << " ]\n";
+		for (int i = 0; i < roundNumber; i++) averages_file << VDelta[i] << ", "; averages_file << VDelta[roundNumber] << " ]\n";
 		
 		averages_file.close();
 	}
