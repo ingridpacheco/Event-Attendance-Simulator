@@ -30,7 +30,7 @@ Customer::Customer() {
 }
 
 // Defines a Customer with identification
-Customer::Customer(int id, int round, customer_type type, double arrival_time) {
+Customer::Customer(int id, int round, customer_type type, double arrival_time, int channel_id) {
 	this->id = id;
 	this->round = round;
 	this->type = type;
@@ -41,6 +41,7 @@ Customer::Customer(int id, int round, customer_type type, double arrival_time) {
 	this->time_in_service = 0;
 	this->arrival_time = arrival_time;
 	this->checkpoint_time = arrival_time;
+	this->channel_id = channel_id;
 }
 
 // Function that determines the size of a data package in bytes (actual function)

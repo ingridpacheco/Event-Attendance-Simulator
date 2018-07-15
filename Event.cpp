@@ -31,17 +31,17 @@ void Event::treat_event(queue *data_queue, queue *voice_queue, Customer *current
 	if (this->etype == ARRIVAL) {
 		this->customer.id = Customer::totalCustomers++;
 		if (current->type == NONE) {
-			*current = Customer(this->customer.id, this->customer.round, this->customer.type, this->time);
+			*current = Customer(this->customer.id, this->customer.round, this->customer.type, this->time, this->customer.channel_id);
 		} else if (this->customer.type == DATA) {
 			queue_insert(data_queue, Customer(this->customer.id, this->customer.round, DATA, this->time));
 		} else if (this->customer.type == VOICE) {
 			if (preemption) {
 				if (current->type == DATA) {
 					queue_return(data_queue, *current);
-					*current = Customer(Customer(this->customer.id, this->customer.round, VOICE, this->time));
-				} else queue_insert(voice_queue, Customer(this->customer.id, this->customer.round, VOICE, this->time));
+					*current = Customer(Customer(this->customer.id, this->customer.round, VOICE, this->time, this->customer.channel_id));
+				} else queue_insert(voice_queue, Customer(this->customer.id, this->customer.round, VOICE, this->time, this->customer.channel_id));
 			} else {
-				queue_insert(voice_queue, Customer(this->customer.id, this->customer.round, VOICE, this->time));
+				queue_insert(voice_queue, Customer(this->customer.id, this->customer.round, VOICE, this->time, this->customer.channel_id));
 			}
 		}
 	} else if (this->etype == EXIT) {
