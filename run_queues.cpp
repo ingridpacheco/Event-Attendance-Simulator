@@ -133,10 +133,12 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 
 	list<Event> event_list;
 
-	list_insert(event_list, createData(Customer::totalCustomers++, 0, simulation_time, lambda));
+	// Inserts the event of the first data package arrival
+	list_insert(event_list, createData(-99999, 0, simulation_time, lambda));
 
 	// VOICE CHANNELS
 	for(int i = 0; i < 30; i++) {
+		// Inserts the events of each voice channel's silence period ending
 		list_insert(event_list, createSilencePeriod(simulation_time, 0, i));
 	}
 	
