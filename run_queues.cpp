@@ -7,6 +7,7 @@
 #include <time.h>
 #include <fstream>
 #include <vector>
+#include <sstream>
 using namespace std;
 
 // Function that determines the number of voice packages (actual function)
@@ -147,9 +148,6 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 
 	//DEBUG FILES
 	ofstream log_file, averages_file;
-	if (allow_logging) {
-		log_file.open ("log.txt");
-	}
 
 	int simulation_percentage = -1;
 	cout << endl;
@@ -158,6 +156,12 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 		//--- Variables needed to calculate the statistics for each round ---//
 		double round_time = simulation_time;
 		//-----------------------------------------------------------------//
+		
+		if (allow_logging) {
+			stringstream sstm;
+			sstm << "log_" << round << ".txt";
+			log_file.open (sstm.str().c_str());
+		}
 		while (Customer::totalCustomers < customersNumber * (round+1)) {
 			Event current_event = *event_list.begin();
 			
@@ -269,7 +273,10 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 			
 		}
 		
-		if (allow_logging) log_file << "End of Round " << round << " ; Duration: " << (simulation_time - round_time) << "ms\n\n";
+		if (allow_logging) {
+			log_file << "End of Round " << round << " ; Duration: " << (simulation_time - round_time) << "ms\n\n";
+			log_file.close();
+		}
 		// Areas Method requires dividing the area by the time spent
 		Nq1[round] /= (simulation_time - round_time);
 		Nq2[round] /= (simulation_time - round_time);
@@ -309,8 +316,6 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	}
 	
 	cout << endl;
-	
-	if (allow_logging) log_file.close();
 	
 	// ----- Finding the averages of the confidence intervals ----- //
 	// Only rounds from which at least one package left the system are eligible for certain statistics.
