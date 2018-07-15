@@ -10,9 +10,6 @@ using namespace std;
 #define MATH
 #endif
 
-// Number used for large sample sizes
-#define BIGNUM 2000000
-
 // Function that generates a random number between 0 and 1
 long double rand1() {
 	return (long double) rand() / (long double) RAND_MAX;
@@ -56,7 +53,7 @@ double sample_mean(double (*function)()) {
 
 // Continuous variable with floating point parameter
 long double sample_mean(double (*function)(double), double d) {
-	long double ret = 0;
+	double ret = 0;
 	double current_sample;
 	for (int i = 0; i < BIGNUM; i++) {
 		current_sample = (*function)(d);

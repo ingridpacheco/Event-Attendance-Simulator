@@ -19,7 +19,7 @@ Event createSilencePeriod_deterministic(float simulation_time, float offset, int
 	Event event = Event(simulation_time + arrivalTime + offset, channel_id);
 	return event;
 }
-
+/*
 // It runs the rounds of the simulation for deterministics silence intervals
 void deterministic_silence_test(int transientPeriod, int customersNumber, int roundNumber, float serviceAverage1){
 	float lambda = 0.15;
@@ -101,6 +101,7 @@ void deterministic_silence_test(int transientPeriod, int customersNumber, int ro
 		}
 	}
 }
+*/
 
 // Tests the queue about receiving new packages
 void queue_test(){
@@ -108,14 +109,8 @@ void queue_test(){
 	queue *voice_queue = queue_create();
 	char input = '\0';
 	int timestamp = 0;
-	unsigned int seed;
 	
-	cout << "Random Seed:";
-	cin >> seed;
-	srand(seed);
-	cout << "\n";
-	
-	cout << "COMMANDS:\n\tD = New data package\n\tV = New voice package\n\tP = Print next\n\tE or Q = Exit\n\n";
+	cout << "COMMANDS:\n\tD = New data package\n\tV = New voice package\n\tP = Print next\n\tE or Q = Exit test\n\n";
 	
 	while (input != 'e' && input != 'E' && input != 'q' && input != 'Q') {
 		cout << "Data packages: " << data_queue->size << "\n";
@@ -123,11 +118,11 @@ void queue_test(){
 		cout << "\n";
 		cin >> input;
 		if (input == 'D' || input == 'd') {
-			Customer c = Customer(DATA, timestamp++);
+			Customer c = Customer(0, 0, DATA, timestamp++);
 			queue_insert(data_queue, c);
 			cout << "Inserted data package! (size = " << c.size << " bits)\n";
 		} else if (input == 'V' || input == 'v') {
-			Customer c = Customer(VOICE, timestamp++);
+			Customer c = Customer(0, 0, VOICE, timestamp++);
 			queue_insert(voice_queue, c);
 			cout << "Inserted voice package! (size = " << c.size << " bits)\n";
 		} else if (input == 'P' || input == 'p') {
@@ -140,29 +135,42 @@ void queue_test(){
 				cout << "Type: " << c.type << "\nSize: " << c.size << "\n\n";
 			}
 		}
+		cout << "COMMANDS:\n\tD = New data package\n\tV = New voice package\n\tP = Print next\n\tE or Q = Exit test\n\n";
 	}
 	
 	cout << '\n';
 }
 
-// Tests if the insertion in the queue is right
-void insert_queue_test(){
+// Tests if the insertion and removal in the list are right
+void event_list_test(){
 	list<Event> event_list;
 	char input;
 	double input2;
-	while(input != 'Q' && input != 'q') {
+	int input3;
+	int id = 0;
+	
+	cout << "COMMANDS:\n\tP = Print event list\n\tI = Insert event\n\tR = Remove event\n\tE or Q = Exit test\n\n";
+	
+	while(input != 'e' && input != 'E' && input != 'q' && input != 'Q') {
 		cout << "\n";
-		cout << "[P]rint or [I]nsert: ";
 		cin >> input;
 		if (input == 'p' || input == 'P') {
-			cout << "\nevent_list contains:";
+			cout << "\nEvent list:";
 			for (list<Event>::iterator it = event_list.begin(); it != event_list.end(); it++)
-				cout << ' ' << it->time;
+				cout << ' ' << it->time << "(" << it->customer.id << ")";
+			cout << endl;
 		} else if (input == 'i' || input == 'I') {
 			cout << "Time: ";
 			cin >> input2;
-			list_insert(event_list, Event(input2, 0));
+			list_insert(event_list, Event(input2, Customer(id++,0,DATA,input2), ARRIVAL));
+		} else if (input == 'r' || input == 'R') {
+			cout << "ID: ";
+			cin >> input3;
+			list_remove(event_list, input3);
 		}
+	
+		cout << "COMMANDS:\n\tP = Print event list\n\tI = Insert event\n\tR = Remove event\n\tE or Q = Exit test\n\n";
+	
 	}
 	cout << "\n";
 }
@@ -198,40 +206,40 @@ void sample_mean_test(int (*function)()) {
 		else if (current_sample == 512) n512++;
 		else if (current_sample == 1500) n1500++;
 	}
-	printf("\t\t64: %lf%%\n\t\t512: %lf%%\n\t\t1500: %lf%%\n", (double)n64/BIGNUM * 100, (double)n512/BIGNUM * 100, (double)n1500/BIGNUM * 100);
+	cout << "\t\t64: " << (double)n64/BIGNUM * 100 << "%\n\t\t512: " << (double)n512/BIGNUM * 100 << "%\n\t\t1500: " << (double)n1500/BIGNUM * 100 << "%" << endl;
 }
 
 int main() {
 	unsigned int random;
-	printf("Random Seed: ");
-	scanf("%int", &random);
+	cout << "Random Seed: ";
+	cin >> random;
 	srand(random);
 	
-	putchar('\n');
+	cout << endl;
 	
-	printf("Data Package Size\n");
-	printf("\tSample Mean: %lf\n", sample_mean(&data_package_size_test));
+	cout << "Data Package Size" << endl;
+	cout << "\tSample Mean: " << sample_mean(&data_package_size_test) << " bytes\n";
 	sample_mean_test(&data_package_size_test);
 	
-	putchar('\n');
+	cout << endl;
 	
-	printf("Voice Package Quantity\n");
-	printf("\tSample Mean: %lf\n", sample_mean(&voice_package_number_test));
+	cout << "Voice Package Quantity" << endl;
+	cout << "\tSample Mean: " << sample_mean(&voice_package_number_test) << endl;
 	
-	putchar('\n');
+	cout << endl;
 	
-	printf("Exponential Silence Period\n");
-	printf("\tSample Mean: %Lf\n", sample_mean(&exponential,(long double)1/.650));
+	cout << "Exponential Silence Period" << endl;
+	cout << "\tSample Mean: " << sample_mean(&exponential,(double)1.0/650) << "ms" << endl;
 
-	putchar('\n');
+	cout << endl;
 
-	printf("Insertion in List\n");
-	insert_queue_test();
+	cout << "Event List test" << endl;
+	event_list_test();
 
-	printf("Queue\n");
+	cout << "Queue System test" << endl;
 	queue_test();
 
-	putchar('\n');
+	cout << endl;
 /* 
 	print("Voice Package:\n");
 	printf() */
