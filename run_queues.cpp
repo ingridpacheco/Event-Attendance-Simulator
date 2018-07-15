@@ -6,6 +6,7 @@
 #include <iostream>
 #include <time.h>
 #include <fstream>
+#include <vector>
 using namespace std;
 
 // Function that determines the number of voice packages (actual function)
@@ -25,7 +26,7 @@ Event createData(int customer_id, int round, float simulation_time, float lambda
 
 // Creates the arrival event of a voice customer 
 Event createVoice(int customer_id, int round, float simulation_time, float offset, int channel_id){
-	Customer customer = Customer(customer_id, round, VOICE, simulation_time + offset);
+	Customer customer = Customer(customer_id, round, VOICE, simulation_time + offset, channel_id);
 	Event event = Event(simulation_time + offset, customer, ARRIVAL, channel_id);
 	return event;
 }
@@ -51,16 +52,12 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	double simulation_time = 0; // Current time in the simulator
 	double lastTime[30]; //Keeps the last time a package of each specific channel entered the server
 
-	// Gets the intervals of each channel;
-	double intervals[30];
-
 	for (int i = 0; i < 30; i++){
 		lastTime[i] = 0;
-		intervals[i] = 0;
 	}
 
-	// Gets the total quantity of intervals;
-	int totalIntervals = 0;
+	// Gets the intervals of each channel;
+	vector <double> intervals;
 	
 	// Since we must ignore the first transientPeriod customers, only customers considered will be the ones with id >= 0
 	// and we'll start counting from -transientPeriod
@@ -215,6 +212,7 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 				}
 				
 			} else if (current_event.etype == SILENCE_END) {
+				if (lastTime[current_event.channel_id] != 0) lastTime[current_event.channel_id] = 0;
 				voice_channels[current_event.channel_id] = voice_package_number();
 				//cout << "Channel " << current_event.channel_id << " will generate: " << voice_channels[current_event.channel_id] << " voice packages!\n";
 				if (voice_channels[current_event.channel_id] > 0) {
@@ -238,12 +236,12 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 				if (customer_being_served.type != NONE) {
 					customer_being_served.time_in_queue += (simulation_time - customer_being_served.checkpoint_time);
 					customer_being_served.checkpoint_time = simulation_time;
-					if((current_event.customer.id == customer_being_served.id) && current_event.customer.type == VOICE){
-						if (lastTime[current_event.channel_id] != 0){
-							intervals[current_event.channel_id] += (customer_being_served.checkpoint_time - lastTime[current_event.channel_id]);
-							totalIntervals += 1;
+					if(customer_being_served.type == VOICE){
+						if (lastTime[customer_being_served.channel_id] != 0){
+							intervals.push_back(customer_being_served.checkpoint_time - lastTime[customer_being_served.channel_id]);
 						}
-						lastTime[current_event.channel_id] = customer_being_served.checkpoint_time;
+						//cout << "CHANNEL ID: " << customer_being_served.channel_id << " LAST TIME: " << lastTime[customer_being_served.channel_id] << " CHECKPOINT TIME: " << customer_being_served.checkpoint_time <<" INTERVAL: " << customer_being_served.checkpoint_time - lastTime[customer_being_served.channel_id] << "\n";
+						lastTime[customer_being_served.channel_id] = customer_being_served.checkpoint_time;
 					}
 					list_insert(event_list, removePackage(simulation_time, customer_being_served));
 				}
@@ -276,15 +274,24 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 		Nq1[round] /= (simulation_time - round_time);
 		Nq2[round] /= (simulation_time - round_time);
 
-		for (int i = 0; i < 30; i++){
+		// Sum all the intervals into delta of the round
+		for (int i = 0; i < intervals.size(); i++){
 			EDelta[round] += intervals[i];
-			intervals[i] = 0;
 		}
-		if (totalIntervals != 0){
-			EDelta[round] = EDelta[round]/totalIntervals;
-			totalIntervals = 0;
+
+		// If there is some interval, divide by the quantity to get the average
+		if (!intervals.empty()) EDelta[round] = EDelta[round]/intervals.size();
+
+		for (int i = 0; i < intervals.size(); i++){
+			VDelta[round] += pow((intervals[i] - EDelta[round]), 2);
 		}
-		//cout << " TOTAL: " << totalIntervals << " EDELTA: " << EDelta[round] << "\n";
+
+		if (intervals.size() <= 1) VDelta[round] = 0;
+		else VDelta[round] = VDelta[round]/(intervals.size() - 1);
+
+		// cout << "ROUND: " << round << " INTERVAL SIZE: " << intervals.size() << " EDelta: " << EDelta[round] << " VDelta: " << VDelta[round] << "\n";
+
+		intervals.clear();
 
 	}
 	
