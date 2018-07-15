@@ -285,13 +285,6 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 			totalIntervals = 0;
 		}
 		//cout << " TOTAL: " << totalIntervals << " EDELTA: " << EDelta[round] << "\n";
-		
-		// Divide the sum of times by the number of events to find the average
-		if (round_data_exits > 0) T1[round] /= round_data_exits;
-		if (round_data_exits > 0) W1[round] /= round_data_exits;
-		if (round_data_exits > 0) X1[round] /= round_data_exits;
-		if (round_voice_exits > 0) T2[round] /= round_voice_exits;
-		if (round_voice_exits > 0) W2[round] /= round_voice_exits;
 
 	}
 	
@@ -347,6 +340,8 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 		ST2 += pow(T2[i] - ET2, 2);
 		SW2 += pow(W2[i] - EW2, 2);
 		SNq2 += pow(Nq2[i] - ENq2, 2);
+		SEDelta += pow(EDelta[i] - EEDelta, 2);
+		SVDelta += pow(VDelta[i] - EVDelta, 2);
 	}
 	ST1 /= (roundNumber - 1);
 	ST1 = sqrt(ST1);
