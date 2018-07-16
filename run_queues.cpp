@@ -18,16 +18,16 @@ int voice_package_number() {
 }
 
 // Creates the arrival event of a data customer 
-Event createData(int customer_id, int round, float simulation_time, float lambda){
+Event createData(int customer_id, float simulation_time, float lambda){
 	double arrivalTime = exponential(lambda);
-	Customer customer = Customer(customer_id, round, DATA, simulation_time + arrivalTime);
+	Customer customer = Customer(customer_id, DATA, simulation_time + arrivalTime);
 	Event event = Event(simulation_time + arrivalTime, customer, ARRIVAL);
 	return event;
 }
 
 // Creates the arrival event of a voice customer 
-Event createVoice(int customer_id, int round, float simulation_time, float offset, int channel_id){
-	Customer customer = Customer(customer_id, round, VOICE, simulation_time + offset, channel_id);
+Event createVoice(int customer_id, float simulation_time, float offset, int channel_id){
+	Customer customer = Customer(customer_id, VOICE, simulation_time + offset, channel_id);
 	Event event = Event(simulation_time + offset, customer, ARRIVAL, channel_id);
 	return event;
 }
@@ -134,7 +134,7 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	list<Event> event_list;
 
 	// Inserts the event of the first data package arrival
-	list_insert(event_list, createData(-99999, 0, simulation_time, lambda));
+	list_insert(event_list, createData(-99999, simulation_time, lambda));
 
 	// VOICE CHANNELS
 	for(int i = 0; i < 30; i++) {
@@ -175,7 +175,7 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 			Customer c_prev = customer_being_served; // needed to test if "treat_event" will change the customer in the server
 			int data_queue_prev = data_traffic->size; // needed to test if "treat_event" will interrupt a data package being served
 			int voice_queue_prev = voice_traffic->size; // both of these are needed for the Areas Method
-			current_event.treat_event(data_traffic, voice_traffic, &customer_being_served, preemption);
+			current_event.treat_event(round, data_traffic, voice_traffic, &customer_being_served, preemption);
 			simulation_time = current_event.time;
 			
 			
@@ -204,11 +204,11 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 			
 			
 			if (current_event.etype == ARRIVAL && current_event.customer.type == DATA) {
-				list_insert(event_list, createData(-99999, round, simulation_time, lambda)); // next data package
+				list_insert(event_list, createData(-99999, simulation_time, lambda)); // next data package
 			} else if (current_event.etype == ARRIVAL && current_event.customer.type == VOICE){
 				if (voice_channels[current_event.channel_id] > 0) {
 					voice_channels[current_event.channel_id]--;
-					list_insert(event_list, createVoice(-99999, round, simulation_time, 16, current_event.channel_id)); // next voice package of this channel
+					list_insert(event_list, createVoice(-99999, simulation_time, 16, current_event.channel_id)); // next voice package of this channel
 				} else {
 					list_insert(event_list, createSilencePeriod(simulation_time, 16, current_event.channel_id)); // starts next silence period 16ms later
 				}
@@ -227,7 +227,7 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 				//cout << "Channel " << current_event.channel_id << " will generate: " << voice_channels[current_event.channel_id] << " voice packages!\n";
 				if (voice_channels[current_event.channel_id] > 0) {
 					voice_channels[current_event.channel_id]--;
-					list_insert(event_list, createVoice(-99999, round, simulation_time, 0, current_event.channel_id)); // next voice package of this channel
+					list_insert(event_list, createVoice(-99999, simulation_time, 0, current_event.channel_id)); // next voice package of this channel
 				}
 			} else if (current_event.etype == EXIT && current_event.customer.type == DATA){
 				T1[current_event.customer.round] += (current_event.time - current_event.customer.arrival_time);
@@ -283,29 +283,32 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 			log_file << "End of Round " << round << " ; Duration: " << (simulation_time - round_time) << "ms\n\n";
 			log_file.close();
 		}
-		// Areas Method requires dividing the area by the time spent
-		Nq1[round] /= (simulation_time - round_time);
-		Nq2[round] /= (simulation_time - round_time);
+		// To be done on all rounds except for the transient period (round 0)
+		if (round > 0) {
+			// Areas Method requires dividing the area by the time spent
+			Nq1[round] /= (simulation_time - round_time);
+			Nq2[round] /= (simulation_time - round_time);
 
-		// Sum all the intervals into delta of the round
-		for (int i = 0; i < intervals.size(); i++){
-			EDelta[round] += intervals[i];
+			// Sum all the intervals into delta of the round
+			for (int i = 0; i < intervals.size(); i++){
+				EDelta[round] += intervals[i];
+			}
+
+			// If there is some interval, divide by the quantity to get the average
+			if (!intervals.empty()) EDelta[round] = EDelta[round]/intervals.size();
+
+			for (int i = 0; i < intervals.size(); i++){
+				VDelta[round] += pow((intervals[i] - EDelta[round]), 2);
+			}
+
+			if (intervals.size() <= 1) VDelta[round] = 0;
+			else VDelta[round] = VDelta[round]/(intervals.size() - 1);
+
+			// cout << "ROUND: " << round << " INTERVAL SIZE: " << intervals.size() << " EDelta: " << EDelta[round] << " VDelta: " << VDelta[round] << "\n";
+
+			intervals.clear();
+
 		}
-
-		// If there is some interval, divide by the quantity to get the average
-		if (!intervals.empty()) EDelta[round] = EDelta[round]/intervals.size();
-
-		for (int i = 0; i < intervals.size(); i++){
-			VDelta[round] += pow((intervals[i] - EDelta[round]), 2);
-		}
-
-		if (intervals.size() <= 1) VDelta[round] = 0;
-		else VDelta[round] = VDelta[round]/(intervals.size() - 1);
-
-		// cout << "ROUND: " << round << " INTERVAL SIZE: " << intervals.size() << " EDelta: " << EDelta[round] << " VDelta: " << VDelta[round] << "\n";
-
-		intervals.clear();
-
 	}
 	
 	// Divide the sum of times by the number of events to find the average
@@ -437,6 +440,14 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	cout << "\nE[Nq2]: " << lower_Nq2 << " < " << ENq2 << " < " << upper_Nq2 << endl;
 	cout << "\nE[Delta]: " << lower_EDelta << " < " << EEDelta << " < " << upper_EDelta << endl;
 	cout << "\nV[Delta]: " << lower_VDelta << " < " << EVDelta << " < " << upper_VDelta << endl;
+	
+	// Print the data necessary for the graph plotting program into a file
+	ofstream graph_data;
+	graph_data.open ("graph_data.txt");
+	graph_data << transientPeriod << "," << T1[0] << "," << W1[0] << "," << X1[0] << "," << Nq1[0] << "," << T2[0] << "," << W2[0] << "," << Nq2[0] << "," << EDelta[0] << "," << VDelta[0] << endl;
+	for (int i=1; i < roundNumber+1; i++) {
+		graph_data << transientPeriod + i*customersNumber << "," << T1[i] << "," << W1[i] << "," << X1[i] << "," << Nq1[i] << "," << T2[i] << "," << W2[i] << "," << Nq2[i] << "," << EDelta[i] << "," << VDelta[i] << endl;
+	}
 	
 }
 

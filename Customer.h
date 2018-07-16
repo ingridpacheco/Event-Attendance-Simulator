@@ -27,7 +27,7 @@ class Customer {
 		int channel_id; // the id of the voice channel related to the customer
 		// Customer(customer_type type, double arrival_time);
 		Customer();
-		Customer(int id, int round, customer_type type, double arrival_time, int channel_id = -1);
+		Customer(int id, customer_type type, double arrival_time, int channel_id = -1);
 };
 
 // Function that determines the size of a data package in bytes (actual function)

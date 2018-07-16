@@ -27,21 +27,22 @@ Event::Event(double time, int channel_id) {
 }
 
 // Method that updates the system's queues and server based on this event's information
-void Event::treat_event(queue *data_queue, queue *voice_queue, Customer *current, bool preemption) {
+void Event::treat_event(int round, queue *data_queue, queue *voice_queue, Customer *current, bool preemption) {
 	if (this->etype == ARRIVAL) {
 		this->customer.id = Customer::totalCustomers++;
+		this->customer.round = round;
 		if (current->type == NONE) {
-			*current = Customer(this->customer.id, this->customer.round, this->customer.type, this->time, this->customer.channel_id);
+			*current = customer;
 		} else if (this->customer.type == DATA) {
-			queue_insert(data_queue, Customer(this->customer.id, this->customer.round, DATA, this->time));
+			queue_insert(data_queue, customer);
 		} else if (this->customer.type == VOICE) {
 			if (preemption) {
 				if (current->type == DATA) {
 					queue_return(data_queue, *current);
-					*current = Customer(Customer(this->customer.id, this->customer.round, VOICE, this->time, this->customer.channel_id));
-				} else queue_insert(voice_queue, Customer(this->customer.id, this->customer.round, VOICE, this->time, this->customer.channel_id));
+					*current = customer;
+				} else queue_insert(voice_queue, customer);
 			} else {
-				queue_insert(voice_queue, Customer(this->customer.id, this->customer.round, VOICE, this->time, this->customer.channel_id));
+				queue_insert(voice_queue, customer);
 			}
 		}
 	} else if (this->etype == EXIT) {

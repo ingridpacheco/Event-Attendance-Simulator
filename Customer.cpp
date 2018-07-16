@@ -30,9 +30,9 @@ Customer::Customer() {
 }
 
 // Defines a Customer with identification
-Customer::Customer(int id, int round, customer_type type, double arrival_time, int channel_id) {
+Customer::Customer(int id, customer_type type, double arrival_time, int channel_id) {
 	this->id = id;
-	this->round = round;
+	this->round = -99999;
 	this->type = type;
 	if (type == DATA) this->size = data_package_size() * 8;
 	else if (type == VOICE) this->size = 512;
