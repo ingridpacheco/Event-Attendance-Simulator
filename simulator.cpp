@@ -37,7 +37,7 @@ int main(){
     if(transientPeriod < 0 || customersNumber <= 0 || roundNumber <= 0 || !(0.1 <= utilization1 && utilization1 <= 0.7))
         cout << "Esse valor não é válido, todos os valores devem ser maior que 0 e a utilização deve estar entre 0.1 e 0.7\n";
     else
-        execution(transientPeriod, customersNumber, roundNumber, utilization1, preemption, allow_logging);
+        execution(seed, transientPeriod, customersNumber, roundNumber, utilization1, preemption, allow_logging);
 
     return 0;
 }

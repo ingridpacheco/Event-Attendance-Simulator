@@ -46,7 +46,7 @@ Event removePackage(float simulation_time, Customer customer){
 }
 
 // It runs the rounds of the simulation
-void rounds(int transientPeriod, int customersNumber, int roundNumber, float serviceAverage1, float lambda, bool preemption, bool allow_logging){
+void rounds(unsigned int seed, int transientPeriod, int customersNumber, int roundNumber, float serviceAverage1, float lambda, bool preemption, bool allow_logging){
     queue* data_traffic = queue_create(); // Queue where the data packages are stored
     queue* voice_traffic = queue_create(); // Queue where the voice packages are stored
 
@@ -397,37 +397,35 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	
 	
 	// Creates a file where all the averages of each round are stored
-	if (allow_logging) {
-		averages_file.open ("averages.txt");
-		averages_file << "\nT1: [ ";
-		for (int i = 0; i < roundNumber; i++) averages_file << T1[i] << ", "; averages_file << T1[roundNumber] << " ]\n";
-		
-		averages_file << "\nW1: [ ";
-		for (int i = 0; i < roundNumber; i++) averages_file << W1[i] << ", "; averages_file << W1[roundNumber] << " ]\n";
-		
-		averages_file << "\nX1: [ ";
-		for (int i = 0; i < roundNumber; i++) averages_file << X1[i] << ", "; averages_file << X1[roundNumber] << " ]\n";
-		
-		averages_file << "\nNq1: [ ";
-		for (int i = 0; i < roundNumber; i++) averages_file << Nq1[i] << ", "; averages_file << Nq1[roundNumber] << " ]\n";
-		
-		averages_file << "\nT2: [ ";
-		for (int i = 0; i < roundNumber; i++) averages_file << T2[i] << ", "; averages_file << T2[roundNumber] << " ]\n";
-		
-		averages_file << "\nW2: [ ";
-		for (int i = 0; i < roundNumber; i++) averages_file << W2[i] << ", "; averages_file << W2[roundNumber] << " ]\n";
-		
-		averages_file << "\nNq2: [ ";
-		for (int i = 0; i < roundNumber; i++) averages_file << Nq2[i] << ", "; averages_file << Nq2[roundNumber] << " ]\n";
-		
-		averages_file << "\nE[Delta]: [ ";
-		for (int i = 0; i < roundNumber; i++) averages_file << EDelta[i] << ", "; averages_file << EDelta[roundNumber] << " ]\n";
-		
-		averages_file << "\nV[Delta]: [ ";
-		for (int i = 0; i < roundNumber; i++) averages_file << VDelta[i] << ", "; averages_file << VDelta[roundNumber] << " ]\n";
-		
-		averages_file.close();
-	}
+	averages_file.open ("averages.txt");
+	averages_file << "\nT1: [ ";
+	for (int i = 0; i < roundNumber; i++) averages_file << T1[i] << ", "; averages_file << T1[roundNumber] << " ]\n";
+	
+	averages_file << "\nW1: [ ";
+	for (int i = 0; i < roundNumber; i++) averages_file << W1[i] << ", "; averages_file << W1[roundNumber] << " ]\n";
+	
+	averages_file << "\nX1: [ ";
+	for (int i = 0; i < roundNumber; i++) averages_file << X1[i] << ", "; averages_file << X1[roundNumber] << " ]\n";
+	
+	averages_file << "\nNq1: [ ";
+	for (int i = 0; i < roundNumber; i++) averages_file << Nq1[i] << ", "; averages_file << Nq1[roundNumber] << " ]\n";
+	
+	averages_file << "\nT2: [ ";
+	for (int i = 0; i < roundNumber; i++) averages_file << T2[i] << ", "; averages_file << T2[roundNumber] << " ]\n";
+	
+	averages_file << "\nW2: [ ";
+	for (int i = 0; i < roundNumber; i++) averages_file << W2[i] << ", "; averages_file << W2[roundNumber] << " ]\n";
+	
+	averages_file << "\nNq2: [ ";
+	for (int i = 0; i < roundNumber; i++) averages_file << Nq2[i] << ", "; averages_file << Nq2[roundNumber] << " ]\n";
+	
+	averages_file << "\nE[Delta]: [ ";
+	for (int i = 0; i < roundNumber; i++) averages_file << EDelta[i] << ", "; averages_file << EDelta[roundNumber] << " ]\n";
+	
+	averages_file << "\nV[Delta]: [ ";
+	for (int i = 0; i < roundNumber; i++) averages_file << VDelta[i] << ", "; averages_file << VDelta[roundNumber] << " ]\n";
+	
+	averages_file.close();
 	
 	// Prints the results
 	cout << "Intervalos de confianca: " << endl;
@@ -442,19 +440,21 @@ void rounds(int transientPeriod, int customersNumber, int roundNumber, float ser
 	cout << "\nV[Delta]: " << lower_VDelta << " < " << EVDelta << " < " << upper_VDelta << endl;
 	
 	// Print the data necessary for the graph plotting program into a file
+	stringstream sstm;
 	ofstream graph_data;
-	graph_data.open ("graph_data.txt");
-	graph_data << transientPeriod << "," << T1[0] << "," << W1[0] << "," << X1[0] << "," << Nq1[0] << "," << T2[0] << "," << W2[0] << "," << Nq2[0] << "," << EDelta[0] << "," << VDelta[0] << endl;
+	sstm << "graph_data" << seed << ".txt";
+	graph_data.open (sstm.str().c_str());
 	for (int i=1; i < roundNumber+1; i++) {
-		graph_data << transientPeriod + i*customersNumber << "," << T1[i] << "," << W1[i] << "," << X1[i] << "," << Nq1[i] << "," << T2[i] << "," << W2[i] << "," << Nq2[i] << "," << EDelta[i] << "," << VDelta[i] << endl;
+		graph_data << i << "," << T1[i] << "," << W1[i] << "," << X1[i] << "," << Nq1[i] << "," << T2[i] << "," << W2[i] << "," << Nq2[i] << "," << EDelta[i] << "," << VDelta[i] << endl;
 	}
+	graph_data.close();
 	
 }
 
-void execution(int transientPeriod, int customersNumber, int roundNumber, float utilization1, bool preemption, bool allow_logging){
+void execution(unsigned int seed, int transientPeriod, int customersNumber, int roundNumber, float utilization1, bool preemption, bool allow_logging){
     // The service 1 average time is going to be the package size average divided by the transmission rate
     float serviceAverage1 = (float) (755 * 8) / (float) (0.002 * 1024 * 1024);
     float lambda = utilization1 / serviceAverage1;
     // Starts rounds
-    rounds(transientPeriod, customersNumber, roundNumber, serviceAverage1, lambda, preemption, allow_logging);
+    rounds(seed, transientPeriod, customersNumber, roundNumber, serviceAverage1, lambda, preemption, allow_logging);
 }
