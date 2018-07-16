@@ -170,7 +170,7 @@ void rounds(int transiente_period, int customers_number, int round_number, float
 			log_file.open (sstm.str().c_str());
 		}
 		// Loops until customers_number customers are sampled or, if this is round 0, until the transiente_period customers are sampled
-		while ((round > 0 && Customer::total_customers < customers_number * (round+1)) || (round == 0 && Customer::total_customers < 0)) {
+		while ((round > 0 && Customer::total_customers < customers_number * (round)) || (round == 0 && Customer::total_customers < 0)) {
 			Event current_event = *event_list.begin();
 			
 			event_list.erase(event_list.begin());
