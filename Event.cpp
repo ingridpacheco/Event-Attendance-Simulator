@@ -29,7 +29,7 @@ Event::Event(double time, int channel_id) {
 // Method that updates the system's queues and server based on this event's information
 void Event::treat_event(int round, queue *data_queue, queue *voice_queue, Customer *current, bool preemption) {
 	if (this->etype == ARRIVAL) {
-		this->customer.id = Customer::totalCustomers++;
+		this->customer.id = Customer::total_customers++;
 		this->customer.round = round;
 		if (current->type == NONE) {
 			*current = customer;

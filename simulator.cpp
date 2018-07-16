@@ -7,7 +7,7 @@ using namespace std;
 
 int main(){
 	unsigned int seed;
-    int transientPeriod, customersNumber, roundNumber;
+    int transient_period, customers_number, round_number;
     float utilization1;
     bool preemption, allow_logging;
 	char input;
@@ -24,20 +24,20 @@ int main(){
 	allow_logging = (input == 'y' || input == 'Y');
     // It gets the transient period, the customers number, the rounds number and the utilization
 	srand(seed);
-    cout << "Periodo Transiente: ";
-    cin >> transientPeriod;
-    cout << "Numero de fregueses: ";
-    cin >> customersNumber;
-    cout << "Numero de rodadas: ";
-    cin >> roundNumber;
-    cout << "Utilizacao1: ";
+    cout << "Transiente Period: ";
+    cin >> transient_period;
+    cout << "Customers Number: ";
+    cin >> customers_number;
+    cout << "Round Number: ";
+    cin >> round_number;
+    cout << "Utilization 1: ";
     cin >> utilization1;
 
     // If the number is out of the limits, it doesnt execute the simulation
-    if(transientPeriod < 0 || customersNumber <= 0 || roundNumber <= 0 || !(0.1 <= utilization1 && utilization1 <= 0.7))
-        cout << "Esse valor não é válido, todos os valores devem ser maior que 0 e a utilização deve estar entre 0.1 e 0.7\n";
+    if(transient_period < 0 || customers_number <= 0 || round_number <= 0 || !(0.1 <= utilization1 && utilization1 <= 0.7))
+        cout << "This isn't a valid value. Please, choose a value greater than 0 and between 0.1 and 0.7 for utilization.\n";
     else
-        execution(seed, transientPeriod, customersNumber, roundNumber, utilization1, preemption, allow_logging);
+        execution(seed, transient_period, customers_number, round_number, utilization1, preemption, allow_logging);
 
     return 0;
 }
