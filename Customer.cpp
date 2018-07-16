@@ -1,12 +1,12 @@
 #include "Customer.h"
 
 // Sets the total of customers to zero
-int Customer::totalCustomers = 0;
+int Customer::total_customers = 0;
 
 /*
 // Defines a Customer without identification
 Customer::Customer(customer_type type, double arrival_time) {
-	this->id = totalCustomers++;
+	this->id = total_customers++;
 	this->type = type;
 	if (type == DATA) this->size = data_package_size() * 8;
 	else if (type == VOICE) this->size = 512;
