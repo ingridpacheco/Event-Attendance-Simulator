@@ -23,4 +23,4 @@ Ele foi escrito na linguagem **C++**, pela proximidade dos integrantes com ela, 
 
 ## Relatório:
 
-Também foi necessário fazer um relatório para maior detalhamento do funcionamento do programa e questões extras. Ele se encontra no caminho raiz do projeto, com o nome: **Trabalho_De_AD.pdf**
+Também foi necessário fazer um relatório para maior detalhamento do funcionamento do programa e questões extras. Ele se encontra no caminho raiz do projeto, com o nome: **Trabalho_de_AD.pdf**
